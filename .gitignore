@@ -1,2 +1,6 @@
-./test/
-./AGENTS.md
+test/
+AGENTS.md
+.codewhale/
+.deepseek/
+.qmlls.ini
+docs/
