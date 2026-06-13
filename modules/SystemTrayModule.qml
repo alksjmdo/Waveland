@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Window
 import QtQuick.Layouts
 import Quickshell.Services.SystemTray
 import Quickshell.Widgets
@@ -9,8 +8,6 @@ Item {
     implicitWidth: Math.max(40, trayRow.implicitWidth + 8)
     implicitHeight: 42
     Layout.alignment: Qt.AlignVCenter
-
-    readonly property var win: Window.window ? Window.window : null
 
     Behavior on x {
         NumberAnimation {
@@ -41,6 +38,7 @@ Item {
             Repeater {
                 model: SystemTray.items
                 Item {
+                    id: trayItem
                     width: visible ? 20 : 0
                     height: 20
                     visible: modelData.id !== "nm-applet"
@@ -55,8 +53,7 @@ Item {
                         acceptedButtons: Qt.LeftButton | Qt.RightButton
                         onClicked: function(mouse) {
                             if (mouse.button === Qt.RightButton) {
-                                var pt = mapToItem(null, mouse.x, mouse.y)
-                                if (trayModule.win) modelData.display(trayModule.win, pt.x, pt.y)
+                                modelData.display(trayItem, 0, 20)
                             } else {
                                 modelData.activate()
                             }
