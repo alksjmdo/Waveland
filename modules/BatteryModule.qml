@@ -1,6 +1,6 @@
 import QtQuick
 import Quickshell
-import Quickshell.Services.UPower
+import Quickshell.Io
 
 Item {
     id: batteryModule
@@ -10,17 +10,26 @@ Item {
 
     property double percentage: 100
 
-    Timer {
-        id: pollTimer
-        interval: 3000
-        running: true
-        repeat: true
-        onTriggered: {
-            var dev = UPower.displayDevice
-            if (dev) {
-                batteryModule.percentage = dev.percentage
+    Process {
+        id: battProcess
+        running: false
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var val = parseFloat(text.trim())
+                if (!isNaN(val)) {
+                    batteryModule.percentage = val
+                }
             }
         }
+    }
+
+    Timer {
+        id: pollTimer
+        interval: 5000
+        running: true
+        repeat: true
+        onTriggered: battProcess.exec(["cat", "/sys/class/power_supply/BAT1/capacity"])
     }
 
     function batteryIcon() {
