@@ -50,10 +50,13 @@ Item {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
                         acceptedButtons: Qt.LeftButton | Qt.RightButton
-                        onClicked: function(mouse) {
-                            if (mouse.button === Qt.RightButton)
+                        onPressed: function(mouse) {
+                            if (mouse.button === Qt.RightButton) {
                                 modelData.secondaryActivate()
-                            else
+                            }
+                        }
+                        onClicked: function(mouse) {
+                            if (mouse.button === Qt.LeftButton)
                                 modelData.activate()
                         }
                     }
