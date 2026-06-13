@@ -6,6 +6,10 @@ Item {
     id: batteryModule
     width: row.implicitWidth
     height: row.implicitHeight
+
+    Behavior on width {
+        NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
+    }
     property alias component: batteryModule
     property bool pillHovered: false
 
