@@ -85,8 +85,11 @@ Item {
     }
 
     function niriAction(msg) {
-        niriProc.command = ["niri", "msg", "action", msg]
-        niriProc.running = true
+        var parts = ["niri", "msg", "action"]
+        var args = msg.split(" ")
+        for (var i = 0; i < args.length; i++)
+            parts.push(args[i])
+        niriProc.exec(parts)
     }
 
     property var _appIconMap: ({
