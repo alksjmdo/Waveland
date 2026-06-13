@@ -99,7 +99,7 @@ Item {
         if (workspaceModule.overviewExpanded) {
             pillRadius = 0
             var contentW = wsReturnBtn.implicitWidth + 8 + wsPillRow.implicitWidth
-            var totalW = leftWaves.implicitWidth + rightWaves.implicitWidth + contentW + 40
+            var totalW = leftWaves.implicitWidth + rightWaves.implicitWidth + contentW + 60
             var bonusW = hovered ? hoverBonusW : 0
             var bonusH = hovered ? hoverBonusH : 0
             targetWidth = Math.max(300, Math.min(700, totalW)) + bonusW
@@ -109,7 +109,7 @@ Item {
         if (musicModule.lyricsMode) {
             pillRadius = 0
             var lyricsContentW = lyricsNoteIcon.implicitWidth + 8 + lyricDisplayText.implicitWidth
-            var totalW = leftWaves.implicitWidth + rightWaves.implicitWidth + lyricsContentW + 32
+            var totalW = leftWaves.implicitWidth + rightWaves.implicitWidth + lyricsContentW + 52
             var bonusW = hovered ? hoverBonusW : 0
             var bonusH = hovered ? hoverBonusH : 0
             targetWidth = Math.max(300, Math.min(600, totalW)) + bonusW
@@ -463,9 +463,9 @@ Item {
     Item {
         id: lyricsOverlay
         anchors.left: leftWaves.right
-        anchors.leftMargin: 10
+        anchors.leftMargin: 20
         anchors.right: rightWaves.left
-        anchors.rightMargin: 10
+        anchors.rightMargin: 20
         anchors.verticalCenter: parent.verticalCenter
         height: 28
 
@@ -510,9 +510,9 @@ Item {
     Item {
         id: wsOverlay
         anchors.left: leftWaves.right
-        anchors.leftMargin: 10
+        anchors.leftMargin: 20
         anchors.right: rightWaves.left
-        anchors.rightMargin: 10
+        anchors.rightMargin: 20
         anchors.verticalCenter: parent.verticalCenter
         height: 28
 
