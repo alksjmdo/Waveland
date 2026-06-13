@@ -53,7 +53,7 @@ Item {
                         acceptedButtons: Qt.LeftButton | Qt.RightButton
                         onPressed: function(mouse) {
                             if (mouse.button === Qt.RightButton) {
-                                var pt = mapToItem(trayModule.shellWindow, mouse.x, mouse.y)
+                                var pt = mapToItem(null, mouse.x, mouse.y)
                                 modelData.display(trayModule.shellWindow, pt.x, pt.y)
                             }
                         }

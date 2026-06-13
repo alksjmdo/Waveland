@@ -5,20 +5,17 @@ Item {
     property alias island: island
     property alias islandColor: island.color
 
-    property int glowMargin: 6
+    property int glowMargin: 5
     width: island.width + glowMargin * 2
     height: island.height + glowMargin * 2
     property int pillRadius: 0
 
     Rectangle {
         id: glow
-        anchors.centerIn: parent
-        anchors.topMargin:0
-        width: island.width + 4
-        height: island.height + 4
-        radius: (container.pillRadius > 0 ? container.pillRadius : island.height / 2) + 6
+        anchors.fill: parent
+        radius: (container.pillRadius > 0 ? container.pillRadius : island.height / 2) + glowMargin
         color: "#94e2d5"
-        opacity: container.hovered ? 0.40 : 0
+        opacity: container.hovered ? 0.4 : 0
         Behavior on opacity {
             NumberAnimation { duration: 300; easing.type: Easing.InOutQuad }
         }
@@ -26,7 +23,8 @@ Item {
 
     Rectangle {
         id: island
-        anchors.centerIn: parent
+        anchors.horizontalCenter: parent.horizontalCenter
+        y: glowMargin
         color: "#1e1e2e"
         radius: container.pillRadius > 0 ? container.pillRadius : height / 2
     }

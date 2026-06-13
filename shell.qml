@@ -29,7 +29,7 @@ PanelWindow {
             registry: moduleRegistry
             eventBus: eventBus
             hovered: islandContainer.hovered
-            shellWindow: root
+            shellWindow: islandContainer.island
         }
 
         island.width: islandLayout.implicitWidth
