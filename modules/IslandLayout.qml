@@ -603,10 +603,7 @@ Item {
                                 width: 20
                                 height: 20
                                 asynchronous: true
-                                source: {
-                                    var cached = workspaceModule.getIconPath(modelData.app_id)
-                                    return cached || ""
-                                }
+                                source: workspaceModule._iconPaths[modelData.app_id] || ""
                                 anchors.verticalCenter: parent.verticalCenter
 
                                 MouseArea {

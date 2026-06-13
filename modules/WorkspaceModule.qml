@@ -92,21 +92,21 @@ Item {
         niriProc.exec(parts)
     }
 
-    property var _iconPathCache: ({})
+    property var _iconPaths: ({})
 
     function getIconPath(appId) {
-        return _iconPathCache[appId] || ""
+        return _iconPaths[appId] || ""
     }
 
     function resolveIconPath(appId) {
         if (!appId) return
-        if (_iconPathCache[appId] !== undefined) return
+        if (_iconPaths[appId] !== undefined) return
         var entry = DesktopEntries.heuristicLookup(appId)
         if (!entry || !entry.icon) {
             var c1 = {}
-            for (var k in _iconPathCache) c1[k] = _iconPathCache[k]
+            for (var k in _iconPaths) c1[k] = _iconPaths[k]
             c1[appId] = ""
-            _iconPathCache = c1
+            _iconPaths = c1
             return
         }
         iconFinder.appId = appId
@@ -123,15 +123,15 @@ Item {
         stdout: StdioCollector {
             onStreamFinished: {
                 var path = text.trim()
-                var newCache = {}
-                for (var key in workspaceModule._iconPathCache)
-                    newCache[key] = workspaceModule._iconPathCache[key]
+                var newPaths = {}
+                for (var key in workspaceModule._iconPaths)
+                    newPaths[key] = workspaceModule._iconPaths[key]
                 if (path) {
-                    newCache[iconFinder.appId] = "file://" + path
+                    newPaths[iconFinder.appId] = "file://" + path
                 } else {
-                    newCache[iconFinder.appId] = ""
+                    newPaths[iconFinder.appId] = ""
                 }
-                workspaceModule._iconPathCache = newCache
+                workspaceModule._iconPaths = newPaths
             }
         }
     }
