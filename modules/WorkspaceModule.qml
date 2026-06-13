@@ -119,10 +119,25 @@ Item {
     })
 
     function appIconFor(appId) {
+        if (!appId) return "\uF2D0"
+        var lower = appId.toLowerCase()
+        if (_appIconMap[lower]) return _appIconMap[lower]
         if (_appIconMap[appId]) return _appIconMap[appId]
-        if (appId.indexOf("terminal") >= 0) return "\uF499"
-        if (appId.indexOf("chrome") >= 0) return "\uED68"
-        if (appId.indexOf("code") >= 0) return "\uF121"
+        if (lower.indexOf("firefox") >= 0) return "\uED49"
+        if (lower.indexOf("chrome") >= 0 || lower.indexOf("chromium") >= 0) return "\uEDAC"
+        if (lower.indexOf("code") >= 0 || lower.indexOf("codium") >= 0) return "\uF121"
+        if (lower.indexOf("terminal") >= 0) return "\uF499"
+        if (lower.indexOf("kitty") >= 0 || lower.indexOf("alacritty") >= 0 || lower.indexOf("wezterm") >= 0 || lower.indexOf("foot") >= 0) return "\uF499"
+        if (lower.indexOf("telegram") >= 0) return "\uF2C6"
+        if (lower.indexOf("thunderbird") >= 0) return "\uF0E0"
+        if (lower.indexOf("nautilus") >= 0 || lower.indexOf("thunar") >= 0 || lower.indexOf("dolphin") >= 0) return "\uF07C"
+        if (lower.indexOf("spotify") >= 0) return "\uF1BC"
+        if (lower.indexOf("mpv") >= 0 || lower.indexOf("vlc") >= 0) return "\uF008"
+        if (lower.indexOf("steam") >= 0) return "\uF1B6"
+        if (lower.indexOf("obs") >= 0) return "\uF03D"
+        if (lower.indexOf("gimp") >= 0) return "\uF03E"
+        if (lower.indexOf("inkscape") >= 0) return "\uF1FC"
+        if (lower.indexOf("libreoffice") >= 0) return "\uF15B"
         return "\uF2D0"
     }
 

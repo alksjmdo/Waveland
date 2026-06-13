@@ -524,7 +524,7 @@ Item {
             id: wsReturnBtn
             text: "\uF311"
             font.family: "JetBrainsMonoNL Nerd Font"
-            font.pixelSize: 18
+            font.pixelSize: 20
             color: "#f38ba8"
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
@@ -556,9 +556,9 @@ Item {
 
                 Rectangle {
                     id: wsPill
-                    width: pillRow.implicitWidth + 20
-                    height: 26
-                    radius: 12
+                    width: pillRow.implicitWidth + 24
+                    height: 30
+                    radius: 14
                     color: "#313244"
                     border.width: isActiveWs ? 1 : 0
                     border.color: "#cba6f7"
@@ -566,15 +566,24 @@ Item {
                     property string wsId: String(modelData)
                     property bool isActiveWs: String(wsId) === String(workspaceModule.activeWsId)
 
+                    MouseArea {
+                        anchors.fill: parent
+                        z: -1
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            workspaceModule.niriAction("focus-workspace --id " + wsPill.wsId)
+                        }
+                    }
+
                     Row {
                         id: pillRow
                         anchors.centerIn: parent
-                        spacing: 4
+                        spacing: 6
 
                         Text {
                             text: workspaceModule.iconForWs(wsPill.wsId)
                             font.family: "JetBrainsMonoNL Nerd Font"
-                            font.pixelSize: 12
+                            font.pixelSize: 20
                             color: "#cba6f7"
                             anchors.verticalCenter: parent.verticalCenter
                         }
@@ -584,7 +593,7 @@ Item {
                             Text {
                                 text: workspaceModule.appIconFor(modelData.app_id)
                                 font.family: "JetBrainsMonoNL Nerd Font"
-                                font.pixelSize: 11
+                                font.pixelSize: 16
                                 color: "#cdd6f4"
                                 anchors.verticalCenter: parent.verticalCenter
 
@@ -596,14 +605,6 @@ Item {
                                     }
                                 }
                             }
-                        }
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            workspaceModule.niriAction("focus-workspace --id " + wsPill.wsId)
                         }
                     }
                 }
