@@ -95,6 +95,24 @@ Item {
             pillRadius = 16
             return
         }
+        if (workspaceModule.overviewExpanded) {
+            pillRadius = 16
+            var ids = workspaceModule.getSortedWsList()
+            var count = ids.length
+            var colW = 100
+            for (var i = 0; i < count; i++) {
+                var wins = workspaceModule.windowsOfWs(ids[i])
+                for (var w = 0; w < wins.length; w++) {
+                    var l = wins[w].title ? wins[w].title.length : 0
+                    var ww = l * 9 + 24
+                    colW = Math.max(colW, ww)
+                }
+            }
+            var total = count * Math.max(100, colW) + Math.max(0, count - 1) * 10 + 40
+            targetWidth = Math.min(700, Math.max(400, total))
+            targetHeight = 200
+            return
+        }
         if (musicModule.lyricsMode) {
             pillRadius = 0
             var lyricsContentW = lyricsNoteIcon.implicitWidth + 8 + lyricDisplayText.implicitWidth
@@ -147,16 +165,31 @@ Item {
         target: workspaceModule
         function onNotifCenterExpandedChanged() {
             layout.recalc()
-            if (workspaceModule.notifCenterExpanded && musicModule.lyricsMode)
-                musicModule.exitLyricsMode()
+            if (workspaceModule.notifCenterExpanded) {
+                if (musicModule.lyricsMode)
+                    musicModule.exitLyricsMode()
+                if (workspaceModule.overviewExpanded)
+                    workspaceModule.overviewExpanded = false
+            }
         }
         function onNotifActiveChanged() {
             layout.recalc()
             if (workspaceModule.notifActive && musicModule.lyricsMode)
                 musicModule.exitLyricsMode()
+            if (workspaceModule.notifActive && workspaceModule.overviewExpanded)
+                workspaceModule.overviewExpanded = false
         }
         function onNotifFadingChanged() {
             layout.recalc()
+        }
+        function onOverviewExpandedChanged() {
+            layout.recalc()
+            if (workspaceModule.overviewExpanded) {
+                if (workspaceModule.notifCenterExpanded)
+                    workspaceModule.notifCenterExpanded = false
+                if (musicModule.lyricsMode)
+                    musicModule.exitLyricsMode()
+            }
         }
     }
 
@@ -179,7 +212,7 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         height: parent.height
 
-        property real _opacity: (workspaceModule.notifCenterExpanded || musicModule.lyricsMode) ? 0 : 1
+        property real _opacity: (workspaceModule.notifCenterExpanded || musicModule.lyricsMode || workspaceModule.overviewExpanded) ? 0 : 1
         Behavior on _opacity {
             NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
         }
@@ -204,7 +237,6 @@ Item {
                         spacing: layout.spacing
                         WorkspaceModule {
                             id: workspaceModule
-                            hovered: layout.hovered
                         }
                         MusicModule {
                             id: musicModule
@@ -477,6 +509,108 @@ Item {
             font.family: "JetBrainsMonoNL Nerd Font"
 
             onImplicitWidthChanged: layout.recalc()
+        }
+    }
+
+    Item {
+        id: overviewOverlay
+        anchors.fill: parent
+        anchors.margins: 4
+
+        property real _opacity: workspaceModule.overviewExpanded ? 1 : 0
+        Behavior on _opacity {
+            NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
+        }
+        opacity: _opacity
+        visible: _opacity > 0.01
+
+        Row {
+            id: overviewRow
+            anchors.centerIn: parent
+            spacing: 10
+            Repeater {
+                model: workspaceModule.getSortedWsList()
+                Item {
+                    id: wsColumn
+                    width: Math.max(100, colLabel.implicitWidth + 24)
+                    height: overviewOverlay.height - 24
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    property string wsId: String(modelData)
+                    property bool isActive: String(wsId) === String(workspaceModule.activeWsId)
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: 10
+                        color: "#313244"
+                        border.width: isActive ? 1 : 0
+                        border.color: "#cba6f7"
+                        opacity: workspaceModule.windowsOfWs(wsId).length > 0 ? 1 : 0.6
+                    }
+
+                    Column {
+                        anchors.left: parent.left
+                        anchors.leftMargin: 12
+                        anchors.right: parent.right
+                        anchors.rightMargin: 12
+                        anchors.top: parent.top
+                        anchors.topMargin: 10
+                        spacing: 6
+
+                        Text {
+                            id: colLabel
+                            text: workspaceModule.iconForWs(wsId) + " " + (workspaceModule._workspaces[wsId] ? workspaceModule._workspaces[wsId].name || "WS" + wsId : "WS" + wsId)
+                            color: "#cba6f7"
+                            font.pixelSize: 12
+                            font.family: "JetBrainsMonoNL Nerd Font"
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+
+                        Repeater {
+                            model: workspaceModule.windowsOfWs(wsId)
+                            Rectangle {
+                                width: parent.width
+                                height: 24
+                                radius: 4
+                                color: winMouse.containsMouse ? "#45475a" : "transparent"
+
+                                property var winData: modelData
+
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    anchors.left: parent.left
+                                    anchors.leftMargin: 4
+                                    text: winData.title || winData.app_id || "Window"
+                                    color: "#a6adc8"
+                                    font.pixelSize: 11
+                                    elide: Text.ElideRight
+                                    width: parent.width - 8
+                                }
+
+                                MouseArea {
+                                    id: winMouse
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    hoverEnabled: true
+                                    onClicked: {
+                                        workspaceModule.niriAction("focus-window --id " + winData.id)
+                                        workspaceModule.overviewExpanded = false
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            workspaceModule.niriAction("focus-workspace --id " + wsId)
+                            workspaceModule.overviewExpanded = false
+                        }
+                    }
+                }
+            }
         }
     }
 

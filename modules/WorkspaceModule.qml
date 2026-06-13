@@ -9,7 +9,7 @@ Item {
     implicitWidth: Math.max(80, capsule.width)
     implicitHeight: 42
     Layout.alignment: Qt.AlignVCenter
-    property bool hovered: false
+    property bool overviewExpanded: false
 
     Behavior on x {
         NumberAnimation {
@@ -31,18 +31,7 @@ Item {
     property var _displayList: []
 
     function refreshDisplay() {
-        if (hovered) {
-            _displayList = _filteredList.slice()
-            if (activeWsId >= 0 && _filteredList.indexOf(activeWsId) < 0) {
-                _displayList.push(activeWsId)
-            }
-            _displayList.sort(function(a, b) {
-                return (_workspaces[a] ? _workspaces[a].idx : 0) -
-                       (_workspaces[b] ? _workspaces[b].idx : 0)
-            })
-        } else {
-            _displayList = activeWsId >= 0 ? [activeWsId] : []
-        }
+        _displayList = activeWsId >= 0 ? [activeWsId] : []
     }
 
     property var _iconMap: ({
@@ -75,6 +64,37 @@ Item {
         return _iconMap["default"]
     }
 
+    function getSortedWsList() {
+        var ids = Object.keys(_workspaces)
+        ids.sort(function(a, b) {
+            return (_workspaces[a] ? _workspaces[a].idx : 0) -
+                   (_workspaces[b] ? _workspaces[b].idx : 0)
+        })
+        return ids
+    }
+
+    function windowsOfWs(wsId) {
+        var wins = []
+        var wids = Object.keys(_windows)
+        for (var i = 0; i < wids.length; i++) {
+            if (_windows[wids[i]].workspace_id == wsId) {
+                wins.push({id: wids[i], title: _windows[wids[i]].title, app_id: _windows[wids[i]].app_id})
+            }
+        }
+        return wins
+    }
+
+    function niriAction(msg) {
+        niriProc.command = ["niri", "msg", "action", msg]
+        niriProc.running = true
+    }
+
+    Process {
+        id: niriProc
+        command: ["niri", "msg", "action"]
+        running: false
+    }
+
     function refreshFiltered() {
         var seen = {}
         var ids = []
@@ -92,21 +112,6 @@ Item {
         })
         _filteredList = ids
         refreshDisplay()
-    }
-
-    onHoveredChanged: {
-        if (!hovered) {
-            collapseTimer.restart()
-        } else {
-            collapseTimer.stop()
-            refreshDisplay()
-        }
-    }
-
-    Timer {
-        id: collapseTimer
-        interval: 350
-        onTriggered: refreshDisplay()
     }
 
     Socket {
@@ -223,24 +228,25 @@ Item {
                 Text {
                     id: delegateText
                     property bool isActive: String(modelData) === String(workspaceModule.activeWsId)
-                    property bool _entered: false
-
-                    Component.onCompleted: {
-                        _entered = true
-                    }
 
                     text: workspaceModule.iconForWs(modelData)
                     color: isActive ? "#cba6f7" : "#6c7086"
-                    font.pixelSize: isActive ? 18 : 14
+                    font.pixelSize: 18
                     font.family: "JetBrainsMonoNL Nerd Font"
-                    opacity: isActive || workspaceModule.hovered ? (_entered ? 1 : 0) : 0
-                    scale: isActive || workspaceModule.hovered ? (_entered ? 1 : 0.3) : 0.3
+                    opacity: 1
+                    scale: 1
 
                     Behavior on opacity {
                         NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
                     }
                     Behavior on scale {
                         NumberAnimation { duration: 200; easing.type: Easing.OutQuad }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: workspaceModule.overviewExpanded = !workspaceModule.overviewExpanded
                     }
                 }
             }
