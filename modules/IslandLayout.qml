@@ -62,7 +62,7 @@ Item {
         NumberAnimation { duration: 300; easing.type: Easing.InOutQuad }
     }
 
-    property real _musicOpacity: musicModule.isPlaying ? 1 : 0
+    property real _musicOpacity: (musicModule.isPlaying || musicModule.lyricsMode) ? 1 : 0
     Behavior on _musicOpacity {
         NumberAnimation { duration: 300; easing.type: Easing.InOutQuad }
     }
@@ -93,6 +93,14 @@ Item {
             targetWidth = 420
             targetHeight = 240
             pillRadius = 16
+            return
+        }
+        if (musicModule.lyricsMode) {
+            pillRadius = 0
+            var bonusW = hovered ? hoverBonusW : 0
+            var bonusH = hovered ? hoverBonusH : 0
+            targetWidth = 320 + bonusW
+            targetHeight = 42 + bonusH
             return
         }
         pillRadius = 0
@@ -147,8 +155,23 @@ Item {
     }
 
     Connections {
+        target: workspaceModule
+        function onNotifActiveChanged() {
+            if (workspaceModule.notifActive && musicModule.lyricsMode)
+                musicModule.exitLyricsMode()
+        }
+        function onNotifCenterExpandedChanged() {
+            if (workspaceModule.notifCenterExpanded && musicModule.lyricsMode)
+                musicModule.exitLyricsMode()
+        }
+    }
+
+    Connections {
         target: musicModule
         function onIsPlayingChanged() {
+            layout.recalc()
+        }
+        function onLyricsModeChanged() {
             layout.recalc()
         }
     }
@@ -162,7 +185,7 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         height: parent.height
 
-        property real _opacity: workspaceModule.notifCenterExpanded ? 0 : 1
+        property real _opacity: (workspaceModule.notifCenterExpanded || musicModule.lyricsMode) ? 0 : 1
         Behavior on _opacity {
             NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
         }
@@ -407,6 +430,53 @@ Item {
                     NumberAnimation { duration: 80; easing.type: Easing.OutQuad }
                 }
             }
+        }
+    }
+
+    Item {
+        id: lyricsOverlay
+        anchors.left: leftWaves.right
+        anchors.leftMargin: 10
+        anchors.right: rightWaves.left
+        anchors.rightMargin: 10
+        anchors.verticalCenter: parent.verticalCenter
+        height: 28
+
+        property real _opacity: musicModule.lyricsMode ? 1 : 0
+        Behavior on _opacity {
+            NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
+        }
+        opacity: _opacity
+        visible: _opacity > 0.01
+
+        Text {
+            id: lyricsNoteIcon
+            text: "\uF3B0"
+            font.family: "JetBrainsMonoNL Nerd Font"
+            font.pixelSize: 20
+            color: "#cba6f7"
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
+
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: musicModule.toggleLyricsMode()
+            }
+        }
+
+        Text {
+            id: lyricDisplayText
+            anchors.left: lyricsNoteIcon.right
+            anchors.leftMargin: 8
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            text: musicModule._displayText
+            color: "#cdd6f4"
+            font.pixelSize: 14
+            font.family: "JetBrainsMonoNL Nerd Font"
+            elide: Text.ElideRight
+            clip: true
         }
     }
 
