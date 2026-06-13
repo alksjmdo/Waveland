@@ -105,11 +105,12 @@ Item {
             var wins = windowsOfWs(ids[i])
             for (var w = 0; w < wins.length; w++) {
                 var appId = wins[w].app_id
-                if (!appId || _iconPaths[appId] !== undefined) continue
+                if (!appId) continue
+                if (_iconPaths[appId] && _iconPaths[appId] !== "") continue
                 var entry = DesktopEntries.heuristicLookup(appId)
                 if (entry && entry.icon) {
                     queries.push(appId + "|" + entry.icon)
-                } else {
+                } else if (_iconPaths[appId] === undefined) {
                     var c = {}
                     for (var k in _iconPaths) c[k] = _iconPaths[k]
                     c[appId] = ""
@@ -131,6 +132,14 @@ Item {
             "  print(app + '|' + files[0])\n" +
             " else:\n" +
             "  print(app + '|')\n"])
+    }
+
+    Timer {
+        id: iconRetryTimer
+        interval: 500
+        running: workspaceModule.overviewExpanded
+        repeat: true
+        onTriggered: workspaceModule.resolveAllIcons()
     }
 
     Process {
