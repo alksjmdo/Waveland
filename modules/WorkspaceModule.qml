@@ -385,6 +385,10 @@ Item {
     }
 
     NotificationServer {
+        bodySupported: true
+        bodyMarkupSupported: true
+        bodyHyperlinksSupported: true
+        bodyImagesSupported: true
         onNotification: function(notification) {
             var item = {
                 summary: notification.summary || "",
