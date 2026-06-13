@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Window
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
@@ -11,8 +10,6 @@ Item {
     implicitWidth: Math.max(40, trayRow.implicitWidth + 8)
     implicitHeight: 42
     Layout.alignment: Qt.AlignVCenter
-
-    property var shellWindow: null
 
     Behavior on x {
         NumberAnimation {
@@ -29,24 +26,27 @@ Item {
 
     Process {
         id: killProc
+        running: false
 
         stdout: StdioCollector {
             onStreamFinished: {
                 var pid = parseInt(text.trim())
                 if (!isNaN(pid) && pid > 1) {
-                    killProc2.exec(["kill", "-9", String(pid)])
+                    finalKill.exec(["kill", "-9", String(pid)])
                 }
             }
         }
     }
 
     Process {
-        id: killProc2
+        id: finalKill
+        running: false
     }
 
     function killApp(id) {
-        killProc.exec(["sh", "-c",
-            "dbus-send --session --print-reply=literal --dest=org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus.GetConnectionUnixProcessID string:" + id + " 2>/dev/null | grep -oP 'uint32 \\K\\d+' | head -1"])
+        killProc.exec(["dbus-send", "--session", "--print-reply=literal",
+            "--dest=org.freedesktop.DBus", "/org/freedesktop/DBus",
+            "org.freedesktop.DBus.GetConnectionUnixProcessID", "string:" + id])
     }
 
         Rectangle {
@@ -77,20 +77,15 @@ Item {
                     MouseArea {
                         id: trayMouse
                         anchors.fill: parent
-                        hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         acceptedButtons: Qt.LeftButton | Qt.RightButton
                         onPressed: function(mouse) {
-                            if (mouse.button === Qt.RightButton) {
-                                killProc.exec(["touch", "/tmp/tray-pressed-" + modelData.id])
-                            }
+                            if (mouse.button === Qt.RightButton)
+                                trayModule.killApp(modelData.id)
                         }
                         onClicked: function(mouse) {
-                            if (mouse.button === Qt.RightButton) {
-                                killProc.exec(["touch", "/tmp/tray-clicked-" + modelData.id])
-                            } else {
+                            if (mouse.button === Qt.LeftButton)
                                 modelData.activate()
-                            }
                         }
                     }
                 }

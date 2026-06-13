@@ -394,7 +394,6 @@ Item {
                     height: parent.height
                     SystemTrayModule {
                         id: trayModule
-                        shellWindow: layout.shellWindow
                         anchors.right: parent.right
                         anchors.verticalCenter: parent.verticalCenter
                     }
