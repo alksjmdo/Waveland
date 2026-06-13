@@ -19,7 +19,6 @@ Item {
     property alias trayModule: trayModule
     property alias musicModule: musicModule
     property alias batteryModule: batteryModule
-    property var shellWindow: null
     property int musicWaveWidth: 70
 
     PwNodePeakMonitor {
