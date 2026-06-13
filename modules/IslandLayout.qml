@@ -717,14 +717,16 @@ Item {
             model: workspaceModule._notificationHistory
 
             delegate: Rectangle {
+                id: notifDelegate
                 width: ListView.view.width
-                height: 36
+                height: modelData.body && modelData.body !== "" ? 52 : 36
                 radius: 8
                 color: "#313244"
 
                 Text {
                     id: notifAppName
-                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.top: parent.top
+                    anchors.topMargin: 8
                     anchors.left: parent.left
                     anchors.leftMargin: 10
                     text: modelData.appName
@@ -735,7 +737,8 @@ Item {
                 }
                 Text {
                     id: notifTime
-                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.top: parent.top
+                    anchors.topMargin: 8
                     anchors.right: parent.right
                     anchors.rightMargin: 10
                     text: modelData.time
@@ -743,7 +746,9 @@ Item {
                     font.pixelSize: 11
                 }
                 Text {
-                    anchors.verticalCenter: parent.verticalCenter
+                    id: notifSummary
+                    anchors.top: parent.top
+                    anchors.topMargin: 8
                     anchors.left: notifAppName.right
                     anchors.leftMargin: 6
                     anchors.right: notifTime.left
@@ -752,6 +757,19 @@ Item {
                     color: "#a6adc8"
                     font.pixelSize: 12
                     elide: Text.ElideRight
+                }
+                Text {
+                    anchors.top: notifSummary.bottom
+                    anchors.topMargin: 2
+                    anchors.left: parent.left
+                    anchors.leftMargin: 10
+                    anchors.right: parent.right
+                    anchors.rightMargin: 10
+                    text: modelData.body || ""
+                    color: "#6c7086"
+                    font.pixelSize: 11
+                    elide: Text.ElideRight
+                    visible: modelData.body && modelData.body !== ""
                 }
             }
         }
