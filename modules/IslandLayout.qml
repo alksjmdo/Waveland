@@ -18,6 +18,7 @@ Item {
     property alias workspaceModule: workspaceModule
     property alias trayModule: trayModule
     property alias musicModule: musicModule
+    property alias batteryModule: batteryModule
     property int musicWaveWidth: 70
 
     PwNodePeakMonitor {
@@ -387,6 +388,12 @@ Item {
                         anchors.right: parent.right
                         anchors.verticalCenter: parent.verticalCenter
                     }
+                    BatteryModule {
+                        id: batteryModule
+                        anchors.right: trayModule.left
+                        anchors.rightMargin: 4
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
                     Text {
                         text: "󰂞"
                         font.family: "JetBrainsMonoNL Nerd Font"
@@ -394,7 +401,7 @@ Item {
                         color: "#cba6f7"
                         opacity: workspaceModule.notifOpacity
                         visible: workspaceModule.notifOpacity > 0.01
-                        anchors.right: trayModule.left
+                        anchors.right: batteryModule.left
                         anchors.rightMargin: 4
                         anchors.verticalCenter: parent.verticalCenter
 
