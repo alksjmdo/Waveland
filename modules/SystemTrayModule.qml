@@ -10,7 +10,7 @@ Item {
     implicitHeight: 42
     Layout.alignment: Qt.AlignVCenter
 
-    readonly property var win: Window.window ? Window.window.contentItem : null
+    readonly property var win: Window.window ? Window.window : null
 
     Behavior on x {
         NumberAnimation {
