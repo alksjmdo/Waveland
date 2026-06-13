@@ -218,7 +218,7 @@ Item {
                     }
                 }
                 Text {
-                    text: "\uF3B0"
+                    text: "󰽰"
                     font.family: "JetBrainsMonoNL Nerd Font"
                     font.pixelSize: 20
                     color: "#cba6f7"
@@ -457,7 +457,7 @@ Item {
 
         Text {
             id: lyricsNoteIcon
-            text: "\uF3B0"
+            text: "󰽰"
             font.family: "JetBrainsMonoNL Nerd Font"
             font.pixelSize: 20
             color: "#cba6f7"
