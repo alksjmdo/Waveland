@@ -137,6 +137,7 @@ Item {
         }
         leftContentWidth = lw
         rightContentWidth = rw
+        rw += spacing + batteryModule.width
         if (musicModule.isPlaying) {
             lw += spacing + 20
             var artW = layout.hovered ? 100 : 28
@@ -197,6 +198,11 @@ Item {
         function onLyricsModeChanged() {
             layout.recalc()
         }
+    }
+
+    Connections {
+        target: batteryModule
+        function onWidthChanged() { layout.recalc() }
     }
 
     Item {
