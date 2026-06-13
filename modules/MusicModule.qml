@@ -183,7 +183,8 @@ Item {
         repeat: true
         onTriggered: {
             if (!musicModule.activePlayer) return
-            var pos = musicModule.activePlayer.position / 1000
+            musicModule.activePlayer.positionChanged()
+            var pos = musicModule.activePlayer.position * 1000
             var idx = musicModule._lrcLines.length - 1
             for (var i = 0; i < musicModule._lrcLines.length; i++) {
                 if (musicModule._lrcLines[i].timeMs > pos) {
