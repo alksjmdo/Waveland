@@ -35,6 +35,7 @@ Item {
         id: hoverArea
         anchors.fill: parent
         hoverEnabled: true
+        acceptedButtons: Qt.LeftButton
         propagateComposedEvents: true
         onClicked: function(mouse) { mouse.accepted = false }
         onPressed: function(mouse) { mouse.accepted = false }
