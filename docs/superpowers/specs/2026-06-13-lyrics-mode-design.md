@@ -96,6 +96,7 @@ MusicModule._lyricsCache: { "trackTitle||trackArtist": [lrcLines] }
 | `_lrcLines` | `var` (array of objects) | 已解析的歌词行 `[{timeMs: int, text: string}]` |
 | `_currentLyricIndex` | `int` | 当前歌词句索引（-1 表示无匹配） |
 | `_currentLyricText` | `string` | 当前歌词文本（绑定到 _lrcLines[_currentLyricIndex].text） |
+| `_displayText` | `string` | 歌词区实际显示的文字：有歌词用歌词，无歌词回退 `trackTitle - trackArtist` |
 | `_lyricsCache` | `var` (object) | `{"title||artist": [{timeMs, text}]}` |
 | `_lyricsLoading` | `bool` | 是否正在获取歌词 |
 
@@ -187,7 +188,7 @@ Item {
     Text {
         id: lyricText
         anchors { left: noteIcon.right; leftMargin: 12; right: rightWaves.left; rightMargin: 12; verticalCenter: parent.verticalCenter }
-        text: musicModule._currentLyricText || "♪ 等待歌词..."
+        text: musicModule._currentLyricText || (musicModule.trackTitle ? musicModule.trackTitle + " - " + musicModule.trackArtist : "♪ 等待歌词...")
         color: "#cdd6f4"
         font.pixelSize: 14
         elide: Text.ElideNone
@@ -252,8 +253,8 @@ function recalc() {
 
 | 场景 | 处理 |
 |------|------|
-| 无歌词数据 | 显示 "♪ 暂无歌词" |
-| 歌词 API 请求失败 | 显示 "♪ 获取歌词失败"，3 秒后重试 |
+| 无歌词数据 | 显示 `trackTitle + " - " + trackArtist`（回退到歌曲名+作者） |
+| 歌词 API 请求失败 | 显示 `trackTitle + " - " + trackArtist`，3 秒后重试 |
 | 尚未进入歌词模式就切歌 | 缓存新歌歌词，下次切到歌词模式直接显示 |
 | 歌词模式中切歌 | 重新 fetch 新歌歌词，过渡期间显示 "♪ 加载中..." |
 | 歌词模式中停止播放 | currentLyricIndex 保持不动，Timer 暂停 |
