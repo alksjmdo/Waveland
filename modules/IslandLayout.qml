@@ -218,7 +218,7 @@ Item {
                     }
                 }
                 Text {
-                    text: "󰽰"
+                    text: "\uF3B0"
                     font.family: "JetBrainsMonoNL Nerd Font"
                     font.pixelSize: 20
                     color: "#cba6f7"
@@ -227,6 +227,12 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     opacity: layout._musicOpacity
                     visible: layout._musicOpacity > 0.01
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: musicModule.toggleLyricsMode()
+                    }
                 }
             }
             Item {
