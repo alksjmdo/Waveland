@@ -1,11 +1,11 @@
 import QtQuick
 import QtQuick.Layouts
-import Quickshell
 import Quickshell.Services.SystemTray
 import Quickshell.Widgets
 
 Item {
     id: trayModule
+    property var shellWindow: null
     implicitWidth: Math.max(40, trayRow.implicitWidth + 8)
     implicitHeight: 42
     Layout.alignment: Qt.AlignVCenter
@@ -53,7 +53,8 @@ Item {
                         acceptedButtons: Qt.LeftButton | Qt.RightButton
                         onPressed: function(mouse) {
                             if (mouse.button === Qt.RightButton) {
-                                modelData.display(Quickshell, mouse.x, mouse.y)
+                                var pt = mapToItem(trayModule.shellWindow, mouse.x, mouse.y)
+                                modelData.display(trayModule.shellWindow, pt.x, pt.y)
                             }
                         }
                         onClicked: function(mouse) {
