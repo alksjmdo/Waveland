@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import Quickshell.Services.SystemTray
 import Quickshell.Widgets
 
@@ -52,7 +53,7 @@ Item {
                         acceptedButtons: Qt.LeftButton | Qt.RightButton
                         onPressed: function(mouse) {
                             if (mouse.button === Qt.RightButton) {
-                                modelData.secondaryActivate()
+                                modelData.display(Quickshell, mouse.x, mouse.y)
                             }
                         }
                         onClicked: function(mouse) {
