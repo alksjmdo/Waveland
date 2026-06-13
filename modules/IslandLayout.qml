@@ -97,9 +97,11 @@ Item {
         }
         if (musicModule.lyricsMode) {
             pillRadius = 0
+            var lyricsContentW = lyricsNoteIcon.implicitWidth + 8 + lyricDisplayText.implicitWidth
+            var totalW = leftWaves.implicitWidth + rightWaves.implicitWidth + lyricsContentW + 32
             var bonusW = hovered ? hoverBonusW : 0
             var bonusH = hovered ? hoverBonusH : 0
-            targetWidth = 320 + bonusW
+            targetWidth = Math.max(300, Math.min(600, totalW)) + bonusW
             targetHeight = 42 + bonusH
             return
         }
@@ -481,8 +483,8 @@ Item {
             color: "#cdd6f4"
             font.pixelSize: 14
             font.family: "JetBrainsMonoNL Nerd Font"
-            elide: Text.ElideRight
-            clip: true
+
+            onImplicitWidthChanged: layout.recalc()
         }
     }
 
