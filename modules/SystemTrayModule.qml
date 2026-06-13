@@ -26,11 +26,20 @@ Item {
 
     Process {
         id: killProc
-        running: false
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var pid = parseInt(text.trim())
+                if (!isNaN(pid) && pid > 1) {
+                    killProc.exec(["kill", "-9", String(pid)])
+                }
+            }
+        }
     }
 
     function killApp(id) {
-        killProc.exec(["pkill", "-x", id])
+        killProc.exec(["sh", "-c",
+            "dbus-send --session --print-reply=literal --dest=org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus.GetConnectionUnixProcessID string:" + id + " 2>/dev/null | grep -oP 'uint32 \\K\\d+' | head -1"])
     }
 
         Rectangle {
