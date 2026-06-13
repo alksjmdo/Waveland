@@ -390,6 +390,7 @@ Item {
                     }
                     BatteryModule {
                         id: batteryModule
+                        pillHovered: layout.hovered
                         anchors.right: trayModule.left
                         anchors.rightMargin: 4
                         anchors.verticalCenter: parent.verticalCenter

@@ -7,8 +7,11 @@ Item {
     width: row.implicitWidth
     height: row.implicitHeight
     property alias component: batteryModule
+    property bool pillHovered: false
 
     property double percentage: 100
+    property string status: "Full"
+    property bool charging: status !== "Discharging"
 
     Process {
         id: battProcess
@@ -16,9 +19,13 @@ Item {
 
         stdout: StdioCollector {
             onStreamFinished: {
-                var val = parseFloat(text.trim())
-                if (!isNaN(val)) {
-                    batteryModule.percentage = val
+                var parts = text.trim().split(" ")
+                if (parts.length >= 2) {
+                    var val = parseFloat(parts[0])
+                    if (!isNaN(val)) {
+                        batteryModule.percentage = val
+                    }
+                    batteryModule.status = parts[1]
                 }
             }
         }
@@ -29,7 +36,8 @@ Item {
         interval: 5000
         running: true
         repeat: true
-        onTriggered: battProcess.exec(["cat", "/sys/class/power_supply/BAT1/capacity"])
+        onTriggered: battProcess.exec(["sh", "-c",
+            "echo $(cat /sys/class/power_supply/BAT1/capacity) $(cat /sys/class/power_supply/BAT1/status)"])
     }
 
     function batteryIcon() {
@@ -53,7 +61,7 @@ Item {
         spacing: 2
 
         Text {
-            text: batteryModule.batteryIcon()
+            text: batteryModule.charging ? "󰚥" : batteryModule.batteryIcon()
             font.family: "JetBrainsMonoNL Nerd Font"
             font.pixelSize: 16
             color: "#a6e3a1"
@@ -66,6 +74,13 @@ Item {
             font.pixelSize: 13
             color: "#cdd6f4"
             anchors.verticalCenter: parent.verticalCenter
+
+            property real _opacity: batteryModule.pillHovered ? 1 : 0
+            Behavior on _opacity {
+                NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
+            }
+            opacity: _opacity
+            visible: _opacity > 0.01
         }
     }
 }
