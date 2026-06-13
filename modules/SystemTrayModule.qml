@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import Quickshell.Services.SystemTray
 import Quickshell.Widgets
 
@@ -47,13 +48,18 @@ Item {
                         anchors.fill: parent
                         source: modelData.icon
                     }
+                    QsMenuAnchor {
+                        id: menuAnchor
+                        menu: modelData.menu ? modelData.menu.menu : null
+                        anchor.item: trayItem
+                    }
                     MouseArea {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
                         acceptedButtons: Qt.LeftButton | Qt.RightButton
                         onClicked: function(mouse) {
-                            if (mouse.button === Qt.RightButton) {
-                                modelData.display(trayItem, 0, 20)
+                            if (mouse.button === Qt.RightButton && menuAnchor.menu) {
+                                menuAnchor.open()
                             } else {
                                 modelData.activate()
                             }
