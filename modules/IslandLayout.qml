@@ -137,7 +137,7 @@ Item {
         }
         leftContentWidth = lw
         rightContentWidth = rw
-        rw += spacing + batteryModule.width
+        rw += spacing + batteryModule.width + spacing + notifBell.implicitWidth
         if (musicModule.isPlaying) {
             lw += spacing + 20
             var artW = layout.hovered ? 100 : 28
@@ -402,6 +402,7 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                     }
                     Text {
+                        id: notifBell
                         text: "󰂞"
                         font.family: "JetBrainsMonoNL Nerd Font"
                         font.pixelSize: 18
