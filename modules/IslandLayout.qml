@@ -96,21 +96,13 @@ Item {
             return
         }
         if (workspaceModule.overviewExpanded) {
-            pillRadius = 16
-            var ids = workspaceModule.getSortedWsList()
-            var count = ids.length
-            var colW = 100
-            for (var i = 0; i < count; i++) {
-                var wins = workspaceModule.windowsOfWs(ids[i])
-                for (var w = 0; w < wins.length; w++) {
-                    var l = wins[w].title ? wins[w].title.length : 0
-                    var ww = l * 9 + 24
-                    colW = Math.max(colW, ww)
-                }
-            }
-            var total = count * Math.max(100, colW) + Math.max(0, count - 1) * 10 + 40
-            targetWidth = Math.min(700, Math.max(400, total))
-            targetHeight = 200
+            pillRadius = 0
+            var contentW = wsReturnBtn.implicitWidth + 8 + wsPillRow.implicitWidth
+            var totalW = leftWaves.implicitWidth + rightWaves.implicitWidth + contentW + 40
+            var bonusW = hovered ? hoverBonusW : 0
+            var bonusH = hovered ? hoverBonusH : 0
+            targetWidth = Math.max(300, Math.min(700, totalW)) + bonusW
+            targetHeight = 42 + bonusH
             return
         }
         if (musicModule.lyricsMode) {
@@ -157,7 +149,11 @@ Item {
         targetHeight = clockModule.implicitHeight + bonusH
     }
 
-    onHoveredChanged: recalc()
+    onHoveredChanged: {
+        recalc()
+        if (!hovered && workspaceModule.overviewExpanded)
+            workspaceModule.overviewExpanded = false
+    }
 
     Component.onCompleted: recalc()
 
@@ -165,12 +161,8 @@ Item {
         target: workspaceModule
         function onNotifCenterExpandedChanged() {
             layout.recalc()
-            if (workspaceModule.notifCenterExpanded) {
-                if (musicModule.lyricsMode)
-                    musicModule.exitLyricsMode()
-                if (workspaceModule.overviewExpanded)
-                    workspaceModule.overviewExpanded = false
-            }
+            if (workspaceModule.notifCenterExpanded && musicModule.lyricsMode)
+                musicModule.exitLyricsMode()
         }
         function onNotifActiveChanged() {
             layout.recalc()
@@ -513,9 +505,13 @@ Item {
     }
 
     Item {
-        id: overviewOverlay
-        anchors.fill: parent
-        anchors.margins: 4
+        id: wsOverlay
+        anchors.left: leftWaves.right
+        anchors.leftMargin: 10
+        anchors.right: rightWaves.left
+        anchors.rightMargin: 10
+        anchors.verticalCenter: parent.verticalCenter
+        height: 28
 
         property real _opacity: workspaceModule.overviewExpanded ? 1 : 0
         Behavior on _opacity {
@@ -524,77 +520,79 @@ Item {
         opacity: _opacity
         visible: _opacity > 0.01
 
+        Text {
+            id: wsReturnBtn
+            text: "\uF311"
+            font.family: "JetBrainsMonoNL Nerd Font"
+            font.pixelSize: 18
+            color: "#f38ba8"
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
+
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: workspaceModule.overviewExpanded = false
+            }
+        }
+
         Row {
-            id: overviewRow
-            anchors.centerIn: parent
-            spacing: 10
+            id: wsPillRow
+            anchors.left: wsReturnBtn.right
+            anchors.leftMargin: 8
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: 8
+
             Repeater {
-                model: workspaceModule.getSortedWsList()
-                Item {
-                    id: wsColumn
-                    width: Math.max(100, colLabel.implicitWidth + 24)
-                    height: overviewOverlay.height - 24
-                    anchors.verticalCenter: parent.verticalCenter
+                model: {
+                    var all = workspaceModule.getSortedWsList()
+                    var filtered = []
+                    for (var i = 0; i < all.length; i++) {
+                        if (workspaceModule.windowsOfWs(all[i]).length > 0)
+                            filtered.push(all[i])
+                    }
+                    return filtered
+                }
+
+                Rectangle {
+                    id: wsPill
+                    width: pillRow.implicitWidth + 20
+                    height: 26
+                    radius: 12
+                    color: "#313244"
+                    border.width: isActiveWs ? 1 : 0
+                    border.color: "#cba6f7"
 
                     property string wsId: String(modelData)
-                    property bool isActive: String(wsId) === String(workspaceModule.activeWsId)
+                    property bool isActiveWs: String(wsId) === String(workspaceModule.activeWsId)
 
-                    Rectangle {
-                        anchors.fill: parent
-                        radius: 10
-                        color: "#313244"
-                        border.width: isActive ? 1 : 0
-                        border.color: "#cba6f7"
-                        opacity: workspaceModule.windowsOfWs(wsId).length > 0 ? 1 : 0.6
-                    }
-
-                    Column {
-                        anchors.left: parent.left
-                        anchors.leftMargin: 12
-                        anchors.right: parent.right
-                        anchors.rightMargin: 12
-                        anchors.top: parent.top
-                        anchors.topMargin: 10
-                        spacing: 6
+                    Row {
+                        id: pillRow
+                        anchors.centerIn: parent
+                        spacing: 4
 
                         Text {
-                            id: colLabel
-                            text: workspaceModule.iconForWs(wsId) + " " + (workspaceModule._workspaces[wsId] ? workspaceModule._workspaces[wsId].name || "WS" + wsId : "WS" + wsId)
-                            color: "#cba6f7"
-                            font.pixelSize: 12
+                            text: workspaceModule.iconForWs(wsPill.wsId)
                             font.family: "JetBrainsMonoNL Nerd Font"
-                            anchors.horizontalCenter: parent.horizontalCenter
+                            font.pixelSize: 12
+                            color: "#cba6f7"
+                            anchors.verticalCenter: parent.verticalCenter
                         }
 
                         Repeater {
-                            model: workspaceModule.windowsOfWs(wsId)
-                            Rectangle {
-                                width: parent.width
-                                height: 24
-                                radius: 4
-                                color: winMouse.containsMouse ? "#45475a" : "transparent"
-
-                                property var winData: modelData
-
-                                Text {
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    anchors.left: parent.left
-                                    anchors.leftMargin: 4
-                                    text: winData.title || winData.app_id || "Window"
-                                    color: "#a6adc8"
-                                    font.pixelSize: 11
-                                    elide: Text.ElideRight
-                                    width: parent.width - 8
-                                }
+                            model: workspaceModule.windowsOfWs(wsPill.wsId)
+                            Text {
+                                text: workspaceModule.appIconFor(modelData.app_id)
+                                font.family: "JetBrainsMonoNL Nerd Font"
+                                font.pixelSize: 11
+                                color: "#cdd6f4"
+                                anchors.verticalCenter: parent.verticalCenter
 
                                 MouseArea {
-                                    id: winMouse
                                     anchors.fill: parent
                                     cursorShape: Qt.PointingHandCursor
-                                    hoverEnabled: true
                                     onClicked: {
-                                        workspaceModule.niriAction("focus-window --id " + winData.id)
-                                        workspaceModule.overviewExpanded = false
+                                        workspaceModule.niriAction("focus-window --id " + modelData.id)
                                     }
                                 }
                             }
@@ -605,8 +603,7 @@ Item {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
-                            workspaceModule.niriAction("focus-workspace --id " + wsId)
-                            workspaceModule.overviewExpanded = false
+                            workspaceModule.niriAction("focus-workspace --id " + wsPill.wsId)
                         }
                     }
                 }

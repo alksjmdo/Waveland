@@ -89,6 +89,43 @@ Item {
         niriProc.running = true
     }
 
+    property var _appIconMap: ({
+        "firefox": "\uED49",
+        "firefoxdeveloperedition": "\uED49",
+        "chromium": "\uEDAC",
+        "chromium-browser": "\uEDAC",
+        "google-chrome": "\uED68",
+        "code": "\uF121",
+        "code-oss": "\uF121",
+        "codium": "\uF121",
+        "kitty": "\uF499",
+        "alacritty": "\uF499",
+        "wezterm": "\uF499",
+        "foot": "\uF499",
+        "org.wezfurlong.wezterm": "\uF499",
+        "telegramdesktop": "\uF2C6",
+        "thunderbird": "\uF0E0",
+        "nautilus": "\uF07C",
+        "thunar": "\uF07C",
+        "dolphin": "\uF07C",
+        "spotify": "\uF1BC",
+        "mpv": "\uF008",
+        "vlc": "\uF008",
+        "steam": "\uF1B6",
+        "obs": "\uF03D",
+        "gimp": "\uF03E",
+        "inkscape": "\uF1FC",
+        "libreoffice": "\uF15B"
+    })
+
+    function appIconFor(appId) {
+        if (_appIconMap[appId]) return _appIconMap[appId]
+        if (appId.indexOf("terminal") >= 0) return "\uF499"
+        if (appId.indexOf("chrome") >= 0) return "\uED68"
+        if (appId.indexOf("code") >= 0) return "\uF121"
+        return "\uF2D0"
+    }
+
     Process {
         id: niriProc
         command: ["niri", "msg", "action"]
