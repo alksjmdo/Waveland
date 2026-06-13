@@ -94,19 +94,23 @@ Item {
 
     property var _iconPathCache: ({})
 
+    function getIconPath(appId) {
+        return _iconPathCache[appId] || ""
+    }
+
     function resolveIconPath(appId) {
-        if (!appId) return ""
-        if (_iconPathCache[appId] !== undefined) return _iconPathCache[appId]
+        if (!appId) return
+        if (_iconPathCache[appId] !== undefined) return
         var entry = DesktopEntries.heuristicLookup(appId)
         if (!entry || !entry.icon) {
-            _iconPathCache[appId] = ""
-            return ""
+            var c1 = {}
+            for (var k in _iconPathCache) c1[k] = _iconPathCache[k]
+            c1[appId] = ""
+            _iconPathCache = c1
+            return
         }
-        var script = "for d in /usr/share/icons/hicolor/*/apps/" + entry.icon + ".* /usr/share/icons/Papirus/*/apps/" + entry.icon + ".* /usr/share/pixmaps/" + entry.icon + ".*; do [ -f \"$d\" ] && printf \"%s\" \"$d\" && exit 0; done"
         iconFinder.appId = appId
-        iconFinder.command = ["sh", "-c", script]
-        iconFinder.running = true
-        return ""
+        iconFinder.exec(["sh", "-c", "python3 -c \"import glob,sys;f=glob.glob('/usr/share/icons/hicolor/*/apps/'+sys.argv[1]+'.[ps][nv][gg]');print(f[0]if f else'')\" " + entry.icon])
     }
 
     Process {
@@ -119,11 +123,15 @@ Item {
         stdout: StdioCollector {
             onStreamFinished: {
                 var path = text.trim()
+                var newCache = {}
+                for (var key in workspaceModule._iconPathCache)
+                    newCache[key] = workspaceModule._iconPathCache[key]
                 if (path) {
-                    workspaceModule._iconPathCache[iconFinder.appId] = "file://" + path
+                    newCache[iconFinder.appId] = "file://" + path
                 } else {
-                    workspaceModule._iconPathCache[iconFinder.appId] = ""
+                    newCache[iconFinder.appId] = ""
                 }
+                workspaceModule._iconPathCache = newCache
             }
         }
     }

@@ -182,6 +182,12 @@ Item {
                     workspaceModule.notifCenterExpanded = false
                 if (musicModule.lyricsMode)
                     musicModule.exitLyricsMode()
+                var ids = workspaceModule.getSortedWsList()
+                for (var i = 0; i < ids.length; i++) {
+                    var wins = workspaceModule.windowsOfWs(ids[i])
+                    for (var w = 0; w < wins.length; w++)
+                        workspaceModule.resolveIconPath(wins[w].app_id)
+                }
             }
         }
     }
@@ -597,7 +603,10 @@ Item {
                                 width: 20
                                 height: 20
                                 asynchronous: true
-                                source: workspaceModule.resolveIconPath(modelData.app_id)
+                                source: {
+                                    var cached = workspaceModule.getIconPath(modelData.app_id)
+                                    return cached || ""
+                                }
                                 anchors.verticalCenter: parent.verticalCenter
 
                                 MouseArea {
