@@ -30,10 +30,7 @@ Item {
     }
 
     function killApp(id) {
-        var name = id
-        var slash = name.lastIndexOf("/")
-        if (slash >= 0) name = name.substring(slash + 1)
-        killProc.exec(["pkill", "-f", name])
+        killProc.exec(["pkill", "-x", id])
     }
 
         Rectangle {
@@ -65,12 +62,13 @@ Item {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
                         acceptedButtons: Qt.LeftButton | Qt.RightButton
-                        onClicked: function(mouse) {
-                            if (mouse.button === Qt.RightButton) {
+                        onPressed: function(mouse) {
+                            if (mouse.button === Qt.RightButton)
                                 trayModule.killApp(modelData.id)
-                            } else {
+                        }
+                        onClicked: function(mouse) {
+                            if (mouse.button === Qt.LeftButton)
                                 modelData.activate()
-                            }
                         }
                     }
                 }
