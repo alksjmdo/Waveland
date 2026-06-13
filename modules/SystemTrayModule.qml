@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 import Quickshell.Services.SystemTray
 import Quickshell.Widgets
 
@@ -21,6 +22,18 @@ Item {
             duration: 200
             easing.type: Easing.OutQuad
         }
+    }
+
+    Process {
+        id: killProc
+        running: false
+    }
+
+    function killApp(id) {
+        var name = id
+        var slash = name.lastIndexOf("/")
+        if (slash >= 0) name = name.substring(slash + 1)
+        killProc.exec(["pkill", "-f", name])
     }
 
         Rectangle {
@@ -48,18 +61,13 @@ Item {
                         anchors.fill: parent
                         source: modelData.icon
                     }
-                    QsMenuAnchor {
-                        id: menuAnchor
-                        menu: modelData.menu ? modelData.menu.menu : null
-                        anchor.item: trayItem
-                    }
                     MouseArea {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
                         acceptedButtons: Qt.LeftButton | Qt.RightButton
                         onClicked: function(mouse) {
-                            if (mouse.button === Qt.RightButton && menuAnchor.menu) {
-                                menuAnchor.open()
+                            if (mouse.button === Qt.RightButton) {
+                                trayModule.killApp(modelData.id)
                             } else {
                                 modelData.activate()
                             }
