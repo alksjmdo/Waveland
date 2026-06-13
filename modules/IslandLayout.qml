@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import Quickshell.Services.Pipewire
 import Quickshell.Widgets
 Item {
@@ -592,10 +593,14 @@ Item {
 
                         Repeater {
                             model: workspaceModule.windowsOfWs(wsPill.wsId)
-                            Text {
-                                text: workspaceModule.appIconFor(modelData.app_id)
-                                font.pixelSize: 12
-                                color: "#cdd6f4"
+                            IconImage {
+                                width: 16
+                                height: 16
+                                asynchronous: true
+                                source: {
+                                    var entry = DesktopEntries.heuristicLookup(modelData.app_id)
+                                    return entry && entry.icon ? entry.icon : ""
+                                }
                                 anchors.verticalCenter: parent.verticalCenter
 
                                 MouseArea {
