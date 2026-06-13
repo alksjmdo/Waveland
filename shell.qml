@@ -51,9 +51,9 @@ PanelWindow {
             expandedWidth: 120,
             persistent: true
         })
-        moduleRegistry.register("battery", "right", islandLayout.batteryModule, {
-            idleWidth: 65,
-            expandedWidth: 65,
+        moduleRegistry.register("music", "left", islandLayout.musicModule, {
+            idleWidth: 0,
+            expandedWidth: 0,
             persistent: true
         })
     }

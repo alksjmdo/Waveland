@@ -4,64 +4,47 @@ import Quickshell.Services.UPower
 
 Item {
     id: batteryModule
-    property int idleWidth: row.implicitWidth
+    width: row.implicitWidth
+    height: row.implicitHeight
     property alias component: batteryModule
-    property bool available: false
-    property double percentage: 0
-    property bool charging: false
 
-    property string iconText: available ? batteryIcon() : ""
+    property double percentage: 100
 
-    Component.onCompleted: {
-        var dev = UPower.displayDevice
-        if (dev) {
-            available = true
-            refresh()
+    Timer {
+        id: pollTimer
+        interval: 3000
+        running: true
+        repeat: true
+        onTriggered: {
+            var dev = UPower.displayDevice
+            if (dev) {
+                batteryModule.percentage = dev.percentage
+            }
         }
     }
 
-    Connections {
-        target: UPower.displayDevice
-        function onPercentageChanged() { refresh() }
-        function onStateChanged() { refresh() }
-    }
-
-    function refresh() {
-        var dev = UPower.displayDevice
-        if (!dev || !available) return
-        percentage = dev.percentage
-        var st = dev.state
-        charging = (st === UPowerDeviceState.Charging || st === UPowerDeviceState.PendingCharge)
-    }
-
     function batteryIcon() {
-        var dec = Math.round(percentage / 10)
-        if (dec < 0) dec = 0
-        if (dec > 10) dec = 10
-        var icons = [
-            "\uF008E", // 0%
-            "\uF007A", // 10%
-            "\uF007B", // 20%
-            "\uF007C", // 30%
-            "\uF007D", // 40%
-            "\uF007E", // 50%
-            "\uF007F", // 60%
-            "\uF0080", // 70%
-            "\uF0081", // 80%
-            "\uF0082", // 90%
-            "\uF0079"  // 100%
-        ]
-        return icons[dec]
+        var pct = Math.round(percentage)
+        if (pct <= 5) return "\uF008E"
+        if (pct <= 15) return "\uF007A"
+        if (pct <= 25) return "\uF007B"
+        if (pct <= 35) return "\uF007C"
+        if (pct <= 45) return "\uF007D"
+        if (pct <= 55) return "\uF007E"
+        if (pct <= 65) return "\uF007F"
+        if (pct <= 75) return "\uF0080"
+        if (pct <= 85) return "\uF0081"
+        if (pct <= 95) return "\uF0082"
+        return "\uF0079"
     }
 
     Row {
         id: row
         anchors.verticalCenter: parent.verticalCenter
         spacing: 2
-        visible: batteryModule.available
 
         Text {
-            text: batteryModule.iconText
+            text: batteryModule.batteryIcon()
             font.family: "JetBrainsMonoNL Nerd Font"
             font.pixelSize: 16
             color: "#a6e3a1"
