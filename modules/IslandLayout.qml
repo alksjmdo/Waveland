@@ -147,24 +147,16 @@ Item {
         target: workspaceModule
         function onNotifCenterExpandedChanged() {
             layout.recalc()
+            if (workspaceModule.notifCenterExpanded && musicModule.lyricsMode)
+                musicModule.exitLyricsMode()
         }
         function onNotifActiveChanged() {
             layout.recalc()
-        }
-        function onNotifFadingChanged() {
-            layout.recalc()
-        }
-    }
-
-    Connections {
-        target: workspaceModule
-        function onNotifActiveChanged() {
             if (workspaceModule.notifActive && musicModule.lyricsMode)
                 musicModule.exitLyricsMode()
         }
-        function onNotifCenterExpandedChanged() {
-            if (workspaceModule.notifCenterExpanded && musicModule.lyricsMode)
-                musicModule.exitLyricsMode()
+        function onNotifFadingChanged() {
+            layout.recalc()
         }
     }
 

@@ -29,23 +29,8 @@ Item {
     property int activeWsId: -1
     property var _filteredList: []
     property var _displayList: []
-    property bool _collapsing: false
-    property var _pendingDisplayList: []
-
-    Timer {
-        id: collapseTimer
-        interval: 300
-        onTriggered: {
-            _collapsing = false
-            _displayList = _pendingDisplayList
-        }
-    }
 
     function refreshDisplay() {
-        if (_collapsing) {
-            _pendingDisplayList = activeWsId >= 0 ? [activeWsId] : []
-            return
-        }
         if (hovered) {
             _displayList = _filteredList.slice()
             if (activeWsId >= 0 && _filteredList.indexOf(activeWsId) < 0) {
@@ -59,6 +44,7 @@ Item {
             _displayList = activeWsId >= 0 ? [activeWsId] : []
         }
     }
+
     property var _iconMap: ({
         "web": "󰈹",
         "code": "󰨞",
@@ -83,9 +69,9 @@ Item {
     function iconForWs(wsId) {
         var ws = _workspaces[wsId]
         if (!ws) return _iconMap["default"]
-        if (!hasWindows(wsId)) return _iconMap["empty"]
         var name = ws.name
         if (name && _iconMap[name]) return _iconMap[name]
+        if (!hasWindows(wsId)) return _iconMap["empty"]
         return _iconMap["default"]
     }
 
@@ -104,24 +90,23 @@ Item {
             return (_workspaces[a] ? _workspaces[a].idx : 0) -
                    (_workspaces[b] ? _workspaces[b].idx : 0)
         })
-        if (_collapsing) {
-            _collapsing = false
-            collapseTimer.stop()
-        }
         _filteredList = ids
         refreshDisplay()
     }
 
     onHoveredChanged: {
-        if (!hovered && _displayList.length > 1) {
-            _collapsing = true
-            _pendingDisplayList = activeWsId >= 0 ? [activeWsId] : []
+        if (!hovered) {
             collapseTimer.restart()
         } else {
-            _collapsing = false
             collapseTimer.stop()
             refreshDisplay()
         }
+    }
+
+    Timer {
+        id: collapseTimer
+        interval: 350
+        onTriggered: refreshDisplay()
     }
 
     Socket {
@@ -150,22 +135,14 @@ Item {
         }
     }
 
-    Component.onCompleted: {
-        if (niriSocket.connected) {
-            niriSocket.write('{"EventStream":null}\n')
-            niriSocket.flush()
-        }
-    }
-
     function handleEvent(event) {
         if (event.WorkspacesChanged) {
             var ws = {}
-            var list = event.WorkspacesChanged.workspaces
-            for (var i = 0; i < list.length; i++) {
-                var w = list[i]
-                ws[w.id] = {
-                    name: w.name || String(w.id),
-                    isActive: w.is_active || false,
+            var wss = event.WorkspacesChanged.workspaces
+            for (var i = 0; i < wss.length; i++) {
+                var w = wss[i]
+                if (w && w.id !== undefined) ws[w.id] = {
+                    name: w.name || "",
                     idx: w.idx || 0
                 }
                 if (w.is_active) activeWsId = w.id
@@ -189,13 +166,23 @@ Item {
         }
         if (event.WindowOpenedOrChanged) {
             var w = event.WindowOpenedOrChanged.window
-            if (w) _windows[w.id] = {
-                title: w.title || "", app_id: w.app_id || "", workspace_id: w.workspace_id || 0
+            if (w) {
+                var nw = {}
+                for (var key in _windows) nw[key] = _windows[key]
+                nw[w.id] = {
+                    title: w.title || "", app_id: w.app_id || "", workspace_id: w.workspace_id || 0
+                }
+                _windows = nw
             }
             refreshFiltered()
         }
         if (event.WindowClosed) {
-            delete _windows[event.WindowClosed.id]
+            var replaced = {}
+            for (var k in _windows) {
+                if (String(k) !== String(event.WindowClosed.id))
+                    replaced[k] = _windows[k]
+            }
+            _windows = replaced
             refreshFiltered()
         }
         if (event.WorkspaceActivated) {
@@ -223,44 +210,20 @@ Item {
 
         Row {
             id: wsRow
-            anchors.centerIn: parent
+            y: (capsule.height - height) / 2
+            x: (capsule.width - width) / 2
             spacing: 6
+
+            Behavior on x {
+                NumberAnimation { duration: 200; easing.type: Easing.OutQuad }
+            }
+
             Repeater {
                 model: workspaceModule._displayList
                 Text {
-                    id: delegateItem
+                    id: delegateText
                     property bool isActive: String(modelData) === String(workspaceModule.activeWsId)
-                    property bool _entered: isActive
-                    property bool shouldFade: !isActive && workspaceModule._collapsing
-
-                    states: [
-                        State {
-                            name: "entering"
-                            when: !_entered && !isActive
-                            PropertyChanges { target: delegateItem; opacity: 0; scale: 0.3 }
-                        },
-                        State {
-                            name: "visible"
-                            when: _entered && !shouldFade
-                        },
-                        State {
-                            name: "fading"
-                            when: _entered && shouldFade
-                            PropertyChanges { target: delegateItem; opacity: 0 }
-                        }
-                    ]
-
-                    transitions: [
-                        Transition {
-                            from: "entering"; to: "visible"
-                            NumberAnimation { property: "opacity"; duration: 300; easing.type: Easing.InOutQuad }
-                            NumberAnimation { property: "scale"; duration: 300; easing.type: Easing.OutQuad }
-                        },
-                        Transition {
-                            from: "visible"; to: "fading"
-                                NumberAnimation { property: "opacity"; duration: 300; easing.type: Easing.InOutQuad }
-                            }
-                    ]
+                    property bool _entered: false
 
                     Component.onCompleted: {
                         _entered = true
@@ -270,6 +233,15 @@ Item {
                     color: isActive ? "#cba6f7" : "#6c7086"
                     font.pixelSize: isActive ? 18 : 14
                     font.family: "JetBrainsMonoNL Nerd Font"
+                    opacity: isActive || workspaceModule.hovered ? (_entered ? 1 : 0) : 0
+                    scale: isActive || workspaceModule.hovered ? (_entered ? 1 : 0.3) : 0.3
+
+                    Behavior on opacity {
+                        NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
+                    }
+                    Behavior on scale {
+                        NumberAnimation { duration: 200; easing.type: Easing.OutQuad }
+                    }
                 }
             }
         }
@@ -298,6 +270,7 @@ Item {
             for (var i = 0; i < workspaceModule._notificationHistory.length; i++)
                 newList.push(workspaceModule._notificationHistory[i])
             workspaceModule._notificationHistory = newList.slice(0, 20)
+            workspaceModule.notifActive = true
             workspaceModule.refreshNotifIcon()
         }
     }
