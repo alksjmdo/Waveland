@@ -163,6 +163,8 @@ Item {
         target: workspaceModule
         function onNotifCenterExpandedChanged() {
             layout.recalc()
+            if (!workspaceModule.notifCenterExpanded)
+                notifCenter.expandedIndex = -1
             if (workspaceModule.notifCenterExpanded && musicModule.lyricsMode)
                 musicModule.exitLyricsMode()
             if (!workspaceModule.notifCenterExpanded)
@@ -648,6 +650,8 @@ Item {
             SpringAnimation { spring: 2.0; damping: 0.5; mass: 1.0 }
         }
 
+        property int expandedIndex: -1
+
         Row {
             id: notifTopRow
             anchors.horizontalCenter: parent.horizontalCenter
@@ -718,10 +722,16 @@ Item {
 
             delegate: Rectangle {
                 id: notifDelegate
+                property int myIndex: index
+                property bool expanded: notifCenter.expandedIndex === myIndex
                 width: ListView.view.width
-                height: modelData.body && modelData.body !== "" ? 52 : 36
+                height: expanded ? bodyText.implicitHeight + 36 : (modelData.body && modelData.body !== "" ? 52 : 36)
                 radius: 8
                 color: "#313244"
+
+                Behavior on height {
+                    NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
+                }
 
                 Text {
                     id: notifAppName
@@ -759,8 +769,9 @@ Item {
                     elide: Text.ElideRight
                 }
                 Text {
+                    id: bodyText
                     anchors.top: notifSummary.bottom
-                    anchors.topMargin: 2
+                    anchors.topMargin: 4
                     anchors.left: parent.left
                     anchors.leftMargin: 10
                     anchors.right: parent.right
@@ -768,8 +779,21 @@ Item {
                     text: modelData.body || ""
                     color: "#6c7086"
                     font.pixelSize: 11
-                    elide: Text.ElideRight
+                    elide: notifDelegate.expanded ? Text.ElideNone : Text.ElideRight
+                    wrapMode: notifDelegate.expanded ? Text.WordWrap : Text.NoWrap
+                    maximumLineCount: notifDelegate.expanded ? 10 : 1
                     visible: modelData.body && modelData.body !== ""
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        if (notifCenter.expandedIndex === myIndex)
+                            notifCenter.expandedIndex = -1
+                        else
+                            notifCenter.expandedIndex = myIndex
+                    }
                 }
             }
         }
