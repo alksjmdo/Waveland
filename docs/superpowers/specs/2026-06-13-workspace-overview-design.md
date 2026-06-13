@@ -178,18 +178,29 @@ if (workspaceModule.overviewExpanded) {
 
 ---
 
-## 8. 文件改动清单
+## 8. 行为变更：hover 不再展开工作区
+
+有此功能后，鼠标悬停灵动岛时工作区组件**不再**水平展开显示其他工作区图标。工作区区域始终只显示活跃工作区图标 `󰮯`，点击即可打开面板查看全部。
+
+**WorkspaceModule 变更：**
+- `refreshDisplay()` 始终使用 collapsed 逻辑：`_displayList = [activeWsId]`
+- 删除 `hovered` 属性和 `collapseTimer`
+- 工作区图标始终显示 `󰮯`（活跃工作区图标），带单击 MouseArea
+
+---
+
+## 9. 文件改动清单
 
 | 文件 | 改动 |
 |------|------|
-| `modules/WorkspaceModule.qml` | 新增 ~40 行：overviewExpanded、getSortedWsList、windowsOfWs、niri 命令 Process |
+| `modules/WorkspaceModule.qml` | 新增 ~40 行：overviewExpanded、getSortedWsList、windowsOfWs、niri 命令 Process；删除 hover 展开逻辑、collapseTimer |
 | `modules/IslandLayout.qml` | 新增 ~80 行：overviewOverlay 组件（卡片 Repeater）、recalc() 面板分支、互斥逻辑 |
 
 ---
 
-## 9. 实施顺序
+## 10. 实施顺序
 
-1. WorkspaceModule 新增 `overviewExpanded` 属性 + niri 命令 Process
+1. WorkspaceModule 移除 hover 展开逻辑（collapseTimer、_displayList hover 分支），新增 `overviewExpanded` 属性
 2. WorkspaceModule 新增 `getSortedWsList()` / `windowsOfWs()` 辅助函数
 3. IslandLayout 新增 `overviewOverlay` 卡片布局
 4. IslandLayout recalc() 面板宽度计算
