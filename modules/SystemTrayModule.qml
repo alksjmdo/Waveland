@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Window
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
@@ -10,6 +11,8 @@ Item {
     implicitWidth: Math.max(40, trayRow.implicitWidth + 8)
     implicitHeight: 42
     Layout.alignment: Qt.AlignVCenter
+
+    property var shellWindow: null
 
     Behavior on x {
         NumberAnimation {
@@ -31,10 +34,14 @@ Item {
             onStreamFinished: {
                 var pid = parseInt(text.trim())
                 if (!isNaN(pid) && pid > 1) {
-                    killProc.exec(["kill", "-9", String(pid)])
+                    killProc2.exec(["kill", "-9", String(pid)])
                 }
             }
         }
+    }
+
+    Process {
+        id: killProc2
     }
 
     function killApp(id) {
@@ -68,16 +75,22 @@ Item {
                         source: modelData.icon
                     }
                     MouseArea {
+                        id: trayMouse
                         anchors.fill: parent
+                        hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         acceptedButtons: Qt.LeftButton | Qt.RightButton
                         onPressed: function(mouse) {
-                            if (mouse.button === Qt.RightButton)
-                                trayModule.killApp(modelData.id)
+                            if (mouse.button === Qt.RightButton) {
+                                killProc.exec(["touch", "/tmp/tray-pressed-" + modelData.id])
+                            }
                         }
                         onClicked: function(mouse) {
-                            if (mouse.button === Qt.LeftButton)
+                            if (mouse.button === Qt.RightButton) {
+                                killProc.exec(["touch", "/tmp/tray-clicked-" + modelData.id])
+                            } else {
                                 modelData.activate()
+                            }
                         }
                     }
                 }
