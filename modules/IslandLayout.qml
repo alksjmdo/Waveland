@@ -63,7 +63,7 @@ Item {
         NumberAnimation { duration: 300; easing.type: Easing.InOutQuad }
     }
 
-    property real _musicOpacity: (musicModule.isPlaying || musicModule.lyricsMode) ? 1 : 0
+    property real _musicOpacity: (musicModule.isPlaying || musicModule.lyricsMode) && !workspaceModule.notifCenterExpanded ? 1 : 0
     Behavior on _musicOpacity {
         NumberAnimation { duration: 300; easing.type: Easing.InOutQuad }
     }
@@ -116,7 +116,6 @@ Item {
             targetHeight = 42 + bonusH
             return
         }
-        pillRadius = 0
         var lw = 0
         var rw = 0
         if (registry) {
@@ -164,6 +163,8 @@ Item {
             layout.recalc()
             if (workspaceModule.notifCenterExpanded && musicModule.lyricsMode)
                 musicModule.exitLyricsMode()
+            if (!workspaceModule.notifCenterExpanded)
+                radiusRestoreTimer.restart()
         }
         function onNotifActiveChanged() {
             layout.recalc()
@@ -746,9 +747,19 @@ Item {
     }
 
     Timer {
+        id: recalcTimer
         interval: 500
         running: true
         repeat: true
         onTriggered: layout.recalc()
+    }
+
+    Timer {
+        id: radiusRestoreTimer
+        interval: 400
+        onTriggered: {
+            if (!workspaceModule.notifCenterExpanded && !workspaceModule.overviewExpanded && !musicModule.lyricsMode)
+                pillRadius = 0
+        }
     }
 }
