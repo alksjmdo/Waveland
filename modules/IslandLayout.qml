@@ -722,33 +722,36 @@ Item {
                 radius: 8
                 color: "#313244"
 
-                Row {
+                Text {
+                    id: notifAppName
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.left: parent.left
                     anchors.leftMargin: 10
-                    spacing: 8
-
-                    Text {
-                        text: modelData.appName
-                        color: "#cdd6f4"
-                        font.pixelSize: 12
-                        width: 80
-                        elide: Text.ElideRight
-                    }
-                    Text {
-                        text: modelData.summary
-                        color: "#a6adc8"
-                        font.pixelSize: 12
-                        elide: Text.ElideRight
-                    }
+                    text: modelData.appName
+                    color: "#cdd6f4"
+                    font.pixelSize: 12
+                    width: Math.min(implicitWidth + 8, 90)
+                    elide: Text.ElideRight
                 }
                 Text {
+                    id: notifTime
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.right: parent.right
                     anchors.rightMargin: 10
                     text: modelData.time
                     color: "#585b70"
                     font.pixelSize: 11
+                }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.left: notifAppName.right
+                    anchors.leftMargin: 6
+                    anchors.right: notifTime.left
+                    anchors.rightMargin: 6
+                    text: modelData.summary
+                    color: "#a6adc8"
+                    font.pixelSize: 12
+                    elide: Text.ElideRight
                 }
             }
         }
