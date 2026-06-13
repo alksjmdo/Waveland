@@ -49,7 +49,13 @@ Item {
                     MouseArea {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: modelData.activate()
+                        acceptedButtons: Qt.LeftButton | Qt.RightButton
+                        onClicked: function(mouse) {
+                            if (mouse.button === Qt.RightButton)
+                                modelData.secondaryActivate()
+                            else
+                                modelData.activate()
+                        }
                     }
                 }
             }
