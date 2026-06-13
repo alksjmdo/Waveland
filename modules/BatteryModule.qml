@@ -67,7 +67,7 @@ Item {
         Text {
             text: batteryModule.charging ? "󰚥" : batteryModule.batteryIcon()
             font.family: "JetBrainsMonoNL Nerd Font"
-            font.pixelSize: 16
+            font.pixelSize: 18
             color: "#a6e3a1"
             anchors.verticalCenter: parent.verticalCenter
         }
