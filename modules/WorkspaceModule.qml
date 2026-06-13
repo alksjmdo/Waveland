@@ -118,8 +118,8 @@ Item {
             }
         }
         if (queries.length === 0) return
-        iconFinder.command = ["python3", "-c",
-            "import glob,sys\n" +
+        iconFinder.exec(["python3", "-c",
+            "import glob\n" +
             "lines = " + JSON.stringify(queries.join("\n")) + ".strip().split(chr(10))\n" +
             "for line in lines:\n" +
             " if not line.strip(): continue\n" +
@@ -130,8 +130,7 @@ Item {
             " if files:\n" +
             "  print(app + '|' + files[0])\n" +
             " else:\n" +
-            "  print(app + '|')\n"]
-        iconFinder.running = true
+            "  print(app + '|')\n"])
     }
 
     Process {
