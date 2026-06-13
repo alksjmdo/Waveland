@@ -571,7 +571,9 @@ Item {
                         z: -1
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
-                            workspaceModule.niriAction("focus-workspace --id " + wsPill.wsId)
+                            var ws = workspaceModule._workspaces[wsPill.wsId]
+                            var idx = ws ? ws.idx : 0
+                            workspaceModule.niriAction("focus-workspace " + idx)
                         }
                     }
 
