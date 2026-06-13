@@ -21,17 +21,18 @@
 
 ```
 歌词模式 island:
-┌──────────────────────────────────────────────┐
-│ ║║ ║║ ║║  󰽰  ♪ 原来你是我最想留住的幸运 ♪  ║║ ║║ ║║ │
-│ 左声波     音符    ←── 歌词水平滚动 ──→     右声波   │
-└──────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────┐
+│ ║║ ║║ ║║    󰽰  ♪ 原来你是我最想留住的幸运 ♪   ║║ ║║ ║║ │
+│ 左声波  10px 音符 8px  ←── 歌词（右超出elide） 10px 右声波 │
+└──────────────────────────────────────────────────────┘
 ```
 
-**规则：**
+**间距规则：**
 - 左声波图 `anchors.left: parent.left + 6`（与普通模式一致）
 - 右声波图 `anchors.right: parent.right + 6`（与普通模式一致）
-- 音符图标紧接左声波右侧
-- 歌词文本填充剩余空间，单行水平滚动
+- 音符图标：`leftMargin: 10`（与左声波间距 10px）
+- 歌词文本：`leftMargin: 8`（与音符图标间距 8px），`rightMargin: 10`（与右声波间距 10px）
+- 歌词文本填充剩余空间，单行，超出用 `elide: Text.ElideRight`
 - 歌词模式下其他组件（工作区、时钟、专辑封面、控制钮、托盘、通知铃）opacity→0，visible→false
 
 ---
@@ -104,9 +105,32 @@ MusicModule._lyricsCache: { "trackTitle||trackArtist": [lrcLines] }
 
 ```
 function toggleLyricsMode()          // 切换 lyricsMode
+function exitLyricsMode()            // 外部调用：强制退出歌词模式（如通知到达时）
 function fetchLyrics(title, artist)  // 调用 curl 获取歌词
 function parseLrc(lrcText)           // 解析 LRC → [{timeMs, text}]
 function updateCurrentLyric()        // 根据 position 匹配当前句
+```
+
+**自动退出监听：**
+```qml
+// 监听通知和播放状态变化，自动退出歌词模式
+Connections {
+    target: workspaceModule
+    function onNotifActiveChanged() {
+        if (workspaceModule.notifActive && musicModule.lyricsMode)
+            musicModule.exitLyricsMode()
+    }
+    function onNotifCenterExpandedChanged() {
+        if (workspaceModule.notifCenterExpanded && musicModule.lyricsMode)
+            musicModule.exitLyricsMode()
+    }
+}
+
+// 播放器停止时自动退出
+onIsPlayingChanged: {
+    if (!isPlaying && lyricsMode)
+        exitLyricsMode()
+}
 ```
 
 ### 4.3 歌词获取实现
@@ -180,14 +204,14 @@ Item {
     // 音符图标
     Text {
         text: "󰽰"
-        anchors { left: leftWaves.right; leftMargin: 8; verticalCenter: parent.verticalCenter }
+        anchors { left: leftWaves.right; leftMargin: 10; verticalCenter: parent.verticalCenter }
         // click → musicModule.toggleLyricsMode()
     }
     
     // 歌词滚动文本
     Text {
         id: lyricText
-        anchors { left: noteIcon.right; leftMargin: 12; right: rightWaves.left; rightMargin: 12; verticalCenter: parent.verticalCenter }
+        anchors { left: noteIcon.right; leftMargin: 8; right: rightWaves.left; rightMargin: 10; verticalCenter: parent.verticalCenter }
         text: musicModule._currentLyricText || (musicModule.trackTitle ? musicModule.trackTitle + " - " + musicModule.trackArtist : "♪ 等待歌词...")
         color: "#cdd6f4"
         font.pixelSize: 14
@@ -249,7 +273,21 @@ function recalc() {
 
 ---
 
-## 6. 边缘情况
+## 6. 自动退出歌词模式
+
+当以下事件发生时，自动切换回普通模式（确保用户不遗漏重要信息）：
+
+| 触发事件 | 来源 | 说明 |
+|----------|------|------|
+| 新通知到达 | WorkspaceModule / NotificationModule | `notifActive` 变为 true |
+| 通知中心展开 | WorkspaceModule | `notifCenterExpanded` 变为 true |
+| 播放器停止、退出 | MusicModule | `isPlaying` 变为 false |
+
+**实现：** 在 EventBus 上订阅对应事件，或在 `MusicModule` 中监听 `workspaceModule.notifActive` / `workspaceModule.notifCenterExpanded` / `musicModule.isPlaying` 的变化，自动设置 `lyricsMode = false`。
+
+---
+
+## 7. 其他边缘情况
 
 | 场景 | 处理 |
 |------|------|
@@ -262,7 +300,7 @@ function recalc() {
 
 ---
 
-## 7. 文件改动清单
+## 8. 文件改动清单
 
 | 文件 | 改动 |
 |------|------|
@@ -271,7 +309,7 @@ function recalc() {
 
 ---
 
-## 8. 实施顺序
+## 9. 实施顺序
 
 1. MusicModule 新增 `lyricsMode` 切换属性
 2. MusicModule 实现 `curl` 歌词获取 + LRC 解析 + 缓存
