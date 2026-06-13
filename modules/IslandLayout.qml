@@ -594,13 +594,10 @@ Item {
                         Repeater {
                             model: workspaceModule.windowsOfWs(wsPill.wsId)
                             IconImage {
-                                width: 16
-                                height: 16
+                                width: 20
+                                height: 20
                                 asynchronous: true
-                                source: {
-                                    var entry = DesktopEntries.heuristicLookup(modelData.app_id)
-                                    return entry && entry.icon ? entry.icon : ""
-                                }
+                                source: workspaceModule.resolveIconPath(modelData.app_id)
                                 anchors.verticalCenter: parent.verticalCenter
 
                                 MouseArea {

@@ -92,48 +92,82 @@ Item {
         niriProc.exec(parts)
     }
 
+    property var _iconPathCache: ({})
+
+    function resolveIconPath(appId) {
+        if (!appId) return ""
+        if (_iconPathCache[appId] !== undefined) return _iconPathCache[appId]
+        var entry = DesktopEntries.heuristicLookup(appId)
+        if (!entry || !entry.icon) {
+            _iconPathCache[appId] = ""
+            return ""
+        }
+        var script = "for d in /usr/share/icons/hicolor/*/apps/" + entry.icon + ".* /usr/share/icons/Papirus/*/apps/" + entry.icon + ".* /usr/share/pixmaps/" + entry.icon + ".*; do [ -f \"$d\" ] && printf \"%s\" \"$d\" && exit 0; done"
+        iconFinder.appId = appId
+        iconFinder.command = ["sh", "-c", script]
+        iconFinder.running = true
+        return ""
+    }
+
+    Process {
+        id: iconFinder
+        command: ["sh", "-c", ""]
+        running: false
+
+        property string appId: ""
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var path = text.trim()
+                if (path) {
+                    workspaceModule._iconPathCache[iconFinder.appId] = "file://" + path
+                } else {
+                    workspaceModule._iconPathCache[iconFinder.appId] = ""
+                }
+            }
+        }
+    }
+
     property var _appIconMap: ({
-        "firefox": "\uED49",
-        "firefoxdeveloperedition": "\uED49",
-        "chromium": "\uEDAC",
-        "chromium-browser": "\uEDAC",
-        "google-chrome": "\uED68",
-        "code": "\uF121",
+        "firefox": "\uF269",
+        "chromium": "\uF268",
+        "google-chrome": "\uF268",
         "code-oss": "\uF121",
-        "codium": "\uF121",
-        "kitty": "\uF499",
-        "alacritty": "\uF499",
-        "wezterm": "\uF499",
-        "foot": "\uF499",
-        "org.wezfurlong.wezterm": "\uF499",
-        "telegramdesktop": "\uF2C6",
-        "thunderbird": "\uF0E0",
-        "nautilus": "\uF07C",
-        "thunar": "\uF07C",
-        "dolphin": "\uF07C",
-        "spotify": "\uF1BC",
-        "mpv": "\uF008",
-        "vlc": "\uF008",
+        "com.visualstudio.code": "\uF121",
+        "alacritty": "\uF120",
+        "kitty": "\uF120",
+        "org.wezfurlong.wezterm": "\uF120",
+        "utilities-terminal": "\uF120",
+        "org.telegram.desktop": "\uF2C6",
+        "spotify-client": "\uF1BC",
         "steam": "\uF1B6",
-        "obs": "\uF03D",
-        "gimp": "\uF03E",
-        "inkscape": "\uF1FC",
-        "libreoffice": "\uF15B"
+        "thunderbird": "\uF0E0",
+        "org.gnome.Nautilus": "\uF07C",
+        "vlc": "\uF008",
+        "discord": "\uF392",
+        "org.gimp.GIMP": "\uF03E",
+        "libreoffice-startcenter": "\uF15B"
     })
 
     function appIconFor(appId) {
         if (!appId) return "\uF2D0"
         var entry = DesktopEntries.heuristicLookup(appId)
-        if (entry && entry.name) return entry.name
+        var iconKey = ""
+        if (entry) {
+            iconKey = entry.icon || ""
+            if (_appIconMap[iconKey]) return _appIconMap[iconKey]
+            if (entry.name && _appIconMap[entry.name]) return _appIconMap[entry.name]
+        }
         var lower = appId.toLowerCase()
-        if (lower.indexOf("firefox") >= 0) return "Firefox"
-        if (lower.indexOf("chrome") >= 0 || lower.indexOf("chromium") >= 0) return "Chrome"
-        if (lower.indexOf("code") >= 0 || lower.indexOf("codium") >= 0) return "Code"
-        if (lower.indexOf("terminal") >= 0 || lower.indexOf("kitty") >= 0 || lower.indexOf("alacritty") >= 0 || lower.indexOf("wezterm") >= 0) return "Term"
-        if (lower.indexOf("telegram") >= 0) return "TG"
-        if (lower.indexOf("spotify") >= 0) return "Spotify"
-        if (lower.indexOf("steam") >= 0) return "Steam"
-        return appId.substring(0, 8)
+        if (_appIconMap[lower]) return _appIconMap[lower]
+        if (lower.indexOf("firefox") >= 0) return "\uF269"
+        if (lower.indexOf("chrome") >= 0 || lower.indexOf("chromium") >= 0) return "\uF268"
+        if (lower.indexOf("code") >= 0 || lower.indexOf("codium") >= 0) return "\uF121"
+        if (lower.indexOf("terminal") >= 0 || lower.indexOf("kitty") >= 0 || lower.indexOf("alacritty") >= 0) return "\uF120"
+        if (lower.indexOf("telegram") >= 0) return "\uF2C6"
+        if (lower.indexOf("spotify") >= 0) return "\uF1BC"
+        if (lower.indexOf("steam") >= 0) return "\uF1B6"
+        return "\uF2D0"
     }
 
     Process {
