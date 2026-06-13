@@ -98,19 +98,40 @@ Item {
         return _iconPaths[appId] || ""
     }
 
-    function resolveIconPath(appId) {
-        if (!appId) return
-        if (_iconPaths[appId] !== undefined) return
-        var entry = DesktopEntries.heuristicLookup(appId)
-        if (!entry || !entry.icon) {
-            var c1 = {}
-            for (var k in _iconPaths) c1[k] = _iconPaths[k]
-            c1[appId] = ""
-            _iconPaths = c1
-            return
+    function resolveAllIcons() {
+        var queries = []
+        var ids = getSortedWsList()
+        for (var i = 0; i < ids.length; i++) {
+            var wins = windowsOfWs(ids[i])
+            for (var w = 0; w < wins.length; w++) {
+                var appId = wins[w].app_id
+                if (!appId || _iconPaths[appId] !== undefined) continue
+                var entry = DesktopEntries.heuristicLookup(appId)
+                if (entry && entry.icon) {
+                    queries.push(appId + "|" + entry.icon)
+                } else {
+                    var c = {}
+                    for (var k in _iconPaths) c[k] = _iconPaths[k]
+                    c[appId] = ""
+                    _iconPaths = c
+                }
+            }
         }
-        iconFinder.appId = appId
-        iconFinder.exec(["sh", "-c", "python3 -c \"import glob,sys;f=glob.glob('/usr/share/icons/hicolor/*/apps/'+sys.argv[1]+'.[ps][nv][gg]');print(f[0]if f else'')\" " + entry.icon])
+        if (queries.length === 0) return
+        iconFinder.command = ["python3", "-c",
+            "import glob,sys\n" +
+            "lines = " + JSON.stringify(queries.join("\n")) + ".strip().split(chr(10))\n" +
+            "for line in lines:\n" +
+            " if not line.strip(): continue\n" +
+            " parts = line.strip().split('|')\n" +
+            " app = parts[0]\n" +
+            " icon = parts[1]\n" +
+            " files = glob.glob('/usr/share/icons/hicolor/*/apps/' + icon + '.[ps][nv][gg]')\n" +
+            " if files:\n" +
+            "  print(app + '|' + files[0])\n" +
+            " else:\n" +
+            "  print(app + '|')\n"]
+        iconFinder.running = true
     }
 
     Process {
@@ -118,18 +139,21 @@ Item {
         command: ["sh", "-c", ""]
         running: false
 
-        property string appId: ""
-
         stdout: StdioCollector {
             onStreamFinished: {
-                var path = text.trim()
+                var lines = text.trim().split("\n")
                 var newPaths = {}
                 for (var key in workspaceModule._iconPaths)
                     newPaths[key] = workspaceModule._iconPaths[key]
-                if (path) {
-                    newPaths[iconFinder.appId] = "file://" + path
-                } else {
-                    newPaths[iconFinder.appId] = ""
+                for (var i = 0; i < lines.length; i++) {
+                    var parts = lines[i].split("|")
+                    if (parts.length >= 2 && parts[0]) {
+                        if (parts[1]) {
+                            newPaths[parts[0]] = "file://" + parts[1]
+                        } else {
+                            newPaths[parts[0]] = ""
+                        }
+                    }
                 }
                 workspaceModule._iconPaths = newPaths
             }

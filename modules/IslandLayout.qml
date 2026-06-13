@@ -182,12 +182,7 @@ Item {
                     workspaceModule.notifCenterExpanded = false
                 if (musicModule.lyricsMode)
                     musicModule.exitLyricsMode()
-                var ids = workspaceModule.getSortedWsList()
-                for (var i = 0; i < ids.length; i++) {
-                    var wins = workspaceModule.windowsOfWs(ids[i])
-                    for (var w = 0; w < wins.length; w++)
-                        workspaceModule.resolveIconPath(wins[w].app_id)
-                }
+                workspaceModule.resolveAllIcons()
             }
         }
     }
