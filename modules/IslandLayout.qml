@@ -594,8 +594,7 @@ Item {
                             model: workspaceModule.windowsOfWs(wsPill.wsId)
                             Text {
                                 text: workspaceModule.appIconFor(modelData.app_id)
-                                font.family: "JetBrainsMonoNL Nerd Font"
-                                font.pixelSize: 16
+                                font.pixelSize: 12
                                 color: "#cdd6f4"
                                 anchors.verticalCenter: parent.verticalCenter
 
