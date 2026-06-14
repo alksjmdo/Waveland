@@ -651,6 +651,21 @@ Item {
         }
 
         property int expandedIndex: -1
+        property bool clearing: false
+
+        onClearingChanged: {
+            if (clearing) clearTimer.restart()
+        }
+
+        Timer {
+            id: clearTimer
+            interval: 200
+            onTriggered: {
+                workspaceModule._notificationHistory = []
+                workspaceModule.clearNotification = true
+                notifCenter.clearing = false
+            }
+        }
 
         Row {
             id: notifTopRow
@@ -699,15 +714,13 @@ Item {
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        workspaceModule._notificationHistory = []
-                        workspaceModule.clearNotification = true
-                    }
+                    onClicked: { notifCenter.clearing = true }
                 }
             }
         }
 
         ListView {
+            id: notifList
             anchors.top: notifTopRow.bottom
             anchors.topMargin: 12
             anchors.left: parent.left
@@ -718,6 +731,10 @@ Item {
             anchors.bottomMargin: 12
             clip: true
             spacing: 6
+            opacity: notifCenter.clearing ? 0 : 1
+            Behavior on opacity {
+                NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
+            }
             model: workspaceModule._notificationHistory
 
             delegate: Rectangle {
