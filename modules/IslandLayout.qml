@@ -778,7 +778,11 @@ Item {
                     anchors.rightMargin: 10
                     text: modelData.body || ""
                     color: notifDelegate.expanded ? "#cdd6f4" : "#6c7086"
-                    font.pixelSize: notifDelegate.expanded ? 15 : 11
+                    property real thisFontSize: notifDelegate.expanded ? 15 : 11
+                    Behavior on thisFontSize {
+                        NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
+                    }
+                    font.pixelSize: thisFontSize
                     elide: notifDelegate.expanded ? Text.ElideNone : Text.ElideRight
                     wrapMode: notifDelegate.expanded ? Text.WordWrap : Text.NoWrap
                     maximumLineCount: notifDelegate.expanded ? 0 : 1
