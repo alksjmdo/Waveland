@@ -781,7 +781,7 @@ Item {
                     font.pixelSize: 11
                     elide: notifDelegate.expanded ? Text.ElideNone : Text.ElideRight
                     wrapMode: notifDelegate.expanded ? Text.WordWrap : Text.NoWrap
-                    maximumLineCount: notifDelegate.expanded ? 10 : 1
+                    maximumLineCount: notifDelegate.expanded ? 0 : 1
                     visible: modelData.body && modelData.body !== ""
                 }
 
