@@ -778,7 +778,7 @@ Item {
                     anchors.rightMargin: 10
                     text: modelData.body || ""
                     color: notifDelegate.expanded ? "#cdd6f4" : "#6c7086"
-                    font.pixelSize: 11
+                    font.pixelSize: notifDelegate.expanded ? 13 : 11
                     elide: notifDelegate.expanded ? Text.ElideNone : Text.ElideRight
                     wrapMode: notifDelegate.expanded ? Text.WordWrap : Text.NoWrap
                     maximumLineCount: notifDelegate.expanded ? 0 : 1
