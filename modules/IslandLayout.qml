@@ -1019,8 +1019,6 @@ Item {
             anchors.bottom: parent.bottom
             anchors.bottomMargin: 12
             clip: true
-            opacity: networkOverlay._showPassword ? 0 : 1
-            visible: opacity > 0.01
 
             ListView {
                 anchors.fill: parent
@@ -1072,139 +1070,40 @@ Item {
                             anchors.centerIn: parent
                         }
 
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: model.inUse ? Qt.ArrowCursor : Qt.PointingHandCursor
-                            onClicked: {
-                                if (model.inUse) return
-                                if (model.secured) {
-                                    networkOverlay._selectedSsid = model.ssid
-                                    networkOverlay._needPassword = true
-                                    networkOverlay._showPassword = true
-                                } else {
-                                    wifiConnect.exec(["nmcli", "dev", "wifi", "connect", model.ssid])
-                                }
+                    MouseArea {
+                        id: wifiMouse
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            if (model.secured) {
+                                networkOverlay._selectedSsid = model.ssid
+                                wifiPasswordDialog.restart()
+                            } else {
+                                wifiConnect.exec(["nmcli", "dev", "wifi", "connect", model.ssid])
                             }
                         }
                     }
-                }
-            }
         }
+    }
 
-        Item {
-            id: passwordPanel
-            anchors.top: networkTopRow.bottom
-            anchors.topMargin: 20
-            anchors.left: parent.left
-            anchors.leftMargin: 16
-            anchors.right: parent.right
-            anchors.rightMargin: 16
-            height: 120
-            opacity: networkOverlay._showPassword ? 1 : 0
-            visible: opacity > 0.01
+    Timer {
+        id: wifiPasswordDialog
+        interval: 50
+        onTriggered: wifiPasswordProc.exec(["sh", "-c",
+            "zenity --password --title='连接 " + networkOverlay._selectedSsid + "' 2>/dev/null"])
+    }
 
-            Column {
-                anchors.centerIn: parent
-                spacing: 12
-                width: parent.width - 48
+    Process {
+        id: wifiPasswordProc
+        running: false
 
-                Text {
-                    text: networkOverlay._selectedSsid
-                    color: "#cdd6f4"
-                    font.pixelSize: 14
-                    anchors.horizontalCenter: parent.horizontalCenter
-                }
-
-                    Rectangle {
-                        width: parent.width
-                        height: 32
-                        radius: 8
-                        color: "#313244"
-                        anchors.horizontalCenter: parent.horizontalCenter
-
-                        TextInput {
-                            id: passwordInput
-                            anchors.fill: parent
-                            anchors.leftMargin: 8
-                            anchors.rightMargin: 8
-                            color: "#cdd6f4"
-                            font.family: "JetBrainsMonoNL Nerd Font"
-                            font.pixelSize: 14
-                            verticalAlignment: TextInput.AlignVCenter
-                            echoMode: TextInput.Password
-                            passwordCharacter: "󰮙"
-                            clip: true
-                        }
-
-                        Text {
-                            text: "输入密码..."
-                            color: "#585b70"
-                            font.pixelSize: 14
-                            anchors.verticalCenter: parent.verticalCenter
-                            anchors.left: parent.left
-                            anchors.leftMargin: 10
-                            visible: !passwordInput.text && !passwordInput.activeFocus
-                        }
-                    }
-
-                Row {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    spacing: 20
-
-                    Rectangle {
-                        width: 80
-                        height: 28
-                        radius: 14
-                        color: "#313244"
-
-                        Text {
-                            text: "取消"
-                            color: "#6c7086"
-                            font.pixelSize: 12
-                            anchors.centerIn: parent
-                        }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                networkOverlay._showPassword = false
-                                networkOverlay._selectedSsid = ""
-                                networkOverlay._needPassword = false
-                                passwordInput.text = ""
-                            }
-                        }
-                    }
-
-                    Rectangle {
-                        width: 80
-                        height: 28
-                        radius: 14
-                        color: "#89b4fa"
-
-                        Text {
-                            text: "连接"
-                            color: "#1e1e2e"
-                            font.pixelSize: 12
-                            anchors.centerIn: parent
-                        }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                if (passwordInput.text) {
-                                    wifiConnect.exec(["nmcli", "dev", "wifi", "connect",
-                                        networkOverlay._selectedSsid,
-                                        "password", passwordInput.text])
-                                }
-                                networkOverlay._showPassword = false
-                                networkOverlay._selectedSsid = ""
-                                networkOverlay._needPassword = false
-                                passwordInput.text = ""
-                            }
-                        }
-                    }
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var pwd = text.trim()
+                if (pwd) {
+                    wifiConnect.exec(["nmcli", "dev", "wifi", "connect",
+                        networkOverlay._selectedSsid,
+                        "password", pwd])
                 }
             }
         }
@@ -1233,4 +1132,7 @@ Item {
                 pillRadius = 0
         }
     }
+}
+}
+}
 }
