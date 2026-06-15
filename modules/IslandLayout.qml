@@ -116,9 +116,9 @@ Item {
         }
         if (musicModule.lyricsMode) {
             pillRadius = 0
-            var lyricsContentW = lyricsNoteIcon.implicitWidth + 8 + lyricDisplayText.implicitWidth
+            var lyricsContentW = lyricsNoteIcon.implicitWidth + 8 + lyricDisplayText.implicitWidth + 8 + lyricsControlsRow.implicitWidth
             var totalW = leftWaves.implicitWidth + rightWaves.implicitWidth + lyricsContentW + 52
-            targetWidth = Math.max(300, Math.min(600, totalW))
+            targetWidth = Math.max(300, Math.min(700, totalW))
             targetHeight = 42
             return
         }
@@ -640,16 +640,93 @@ Item {
             }
         }
 
+        Row {
+            id: lyricsControlsRow
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: 4
+
+            Rectangle {
+                width: 24
+                height: 24
+                radius: 10
+                clip: true
+                color: "#313244"
+                anchors.verticalCenter: parent.verticalCenter
+
+                IconImage {
+                    anchors.fill: parent
+                    anchors.margins: 2
+                    source: musicModule.trackArtUrl !== "" ? musicModule.trackArtUrl : ""
+                    asynchronous: true
+                }
+            }
+
+            Text {
+                text: "\uF048"
+                font.family: "JetBrainsMonoNL Nerd Font"
+                font.pixelSize: 16
+                color: "#cdd6f4"
+                anchors.verticalCenter: parent.verticalCenter
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        if (musicModule.activePlayer && musicModule.activePlayer.canGoPrevious)
+                            musicModule.activePlayer.previous()
+                    }
+                }
+            }
+
+            Text {
+                text: musicModule.isPlaying ? "\uF04D" : "\uF04B"
+                font.family: "JetBrainsMonoNL Nerd Font"
+                font.pixelSize: 16
+                color: "#cba6f7"
+                anchors.verticalCenter: parent.verticalCenter
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        if (musicModule.activePlayer && musicModule.activePlayer.canTogglePlaying)
+                            musicModule.activePlayer.togglePlaying()
+                    }
+                }
+            }
+
+            Text {
+                text: "\uF051"
+                font.family: "JetBrainsMonoNL Nerd Font"
+                font.pixelSize: 16
+                color: "#cdd6f4"
+                anchors.verticalCenter: parent.verticalCenter
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        if (musicModule.activePlayer && musicModule.activePlayer.canGoNext)
+                            musicModule.activePlayer.next()
+                    }
+                }
+            }
+        }
+
         Text {
             id: lyricDisplayText
             anchors.left: lyricsNoteIcon.right
             anchors.leftMargin: 8
-            anchors.right: parent.right
+            anchors.right: lyricsControlsRow.left
+            anchors.rightMargin: 8
             anchors.verticalCenter: parent.verticalCenter
             text: musicModule._displayText
             color: "#cdd6f4"
             font.pixelSize: 14
             font.family: "JetBrainsMonoNL Nerd Font"
+            elide: Text.ElideRight
+            clip: true
 
             onImplicitWidthChanged: layout.recalc()
         }
