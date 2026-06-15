@@ -19,6 +19,15 @@ Item {
     property string status: "Full"
     property bool charging: status !== "Discharging"
 
+    onPercentageChanged: ringCanvas.requestPaint()
+
+    function ringColor() {
+        if (charging) return "#a6e3a1"
+        if (percentage > 60) return "#a6e3a1"
+        if (percentage > 20) return "#f9e2af"
+        return "#f38ba8"
+    }
+
     Process {
         id: battProcess
         running: false
@@ -66,13 +75,44 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         spacing: 2
 
-        Text {
-            id: battIcon
-            text: batteryModule.charging ? "󰚥" : batteryModule.batteryIcon()
-            font.family: "JetBrainsMonoNL Nerd Font"
-            font.pixelSize: 18
-            color: "#a6e3a1"
-            anchors.verticalCenter: parent.verticalCenter
+        Item {
+            id: iconCell
+            width: 30
+            height: 42
+
+            Canvas {
+                id: ringCanvas
+                anchors.fill: parent
+
+                onPaint: {
+                    var ctx = getContext("2d")
+                    ctx.clearRect(0, 0, width, height)
+
+                    var pct = batteryModule.percentage / 100
+                    if (pct <= 0) return
+
+                    var cx = width / 2
+                    var cy = height / 2
+                    var r = 12
+                    var col = batteryModule.ringColor()
+
+                    ctx.beginPath()
+                    ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + pct * 2 * Math.PI, false)
+                    ctx.strokeStyle = col
+                    ctx.lineWidth = 2
+                    ctx.lineCap = "round"
+                    ctx.stroke()
+                }
+            }
+
+            Text {
+                id: battIcon
+                text: batteryModule.charging ? "󰚥" : batteryModule.batteryIcon()
+                font.family: "JetBrainsMonoNL Nerd Font"
+                font.pixelSize: 18
+                color: batteryModule.ringColor()
+                anchors.centerIn: parent
+            }
         }
 
         Text {
