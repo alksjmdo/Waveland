@@ -958,38 +958,49 @@ Item {
 
         property real _lyricOpacity: 1
         Behavior on _lyricOpacity {
-            NumberAnimation { duration: 150; easing.type: Easing.InOutQuad }
+            NumberAnimation { duration: 180; easing.type: Easing.InOutQuad }
         }
 
         property real _lyricY: 0
         Behavior on _lyricY {
-            NumberAnimation { duration: 200; easing.type: Easing.OutQuad }
+            NumberAnimation { duration: 220; easing.type: Easing.OutQuad }
         }
+
+        property bool _lyricAnimating: false
+        property string _oldPrevLine: ""
+        property string _oldCurrLine: ""
+        property string _oldNextLine: ""
 
         Connections {
             target: musicModule
             function on_CurrentLyricIndexChanged() {
+                if (!musicModule.lyricsExpanded) return
+                _oldPrevLine = prevLine.text
+                _oldCurrLine = currentLine.text
+                _oldNextLine = nextLine.text
+                _lyricAnimating = true
                 _lyricOpacity = 0
-                _lyricY = -24
+                _lyricY = -40
                 lyricSlideTimer.restart()
             }
         }
 
         Timer {
             id: lyricSlideTimer
-            interval: 160
+            interval: 180
             onTriggered: {
-                _lyricY = 24
+                _lyricY = 40
                 lyricShowTimer.restart()
             }
         }
 
         Timer {
             id: lyricShowTimer
-            interval: 20
+            interval: 30
             onTriggered: {
                 _lyricY = 0
                 _lyricOpacity = 1
+                _lyricAnimating = false
             }
         }
 
@@ -1082,8 +1093,8 @@ Item {
                             id: prevLine
                             opacity: lyricsExpandedOverlay._lyricOpacity
                             transform: Translate { y: lyricsExpandedOverlay._lyricY }
-                            text: musicModule._currentLyricIndex > 0 && musicModule._currentLyricIndex <= musicModule._lrcLines.length
-                                ? musicModule._lrcLines[musicModule._currentLyricIndex - 1].text : ""
+                            text: lyricsExpandedOverlay._lyricAnimating ? lyricsExpandedOverlay._oldPrevLine : (musicModule._currentLyricIndex > 0 && musicModule._currentLyricIndex <= musicModule._lrcLines.length
+                                ? musicModule._lrcLines[musicModule._currentLyricIndex - 1].text : "")
                             font.family: "JetBrainsMonoNL Nerd Font"
                             font.pixelSize: 14
                             color: musicModule._coverSecondary
@@ -1095,10 +1106,11 @@ Item {
                         }
 
                         Text {
+                            id: currentLine
                             opacity: lyricsExpandedOverlay._lyricOpacity
                             transform: Translate { y: lyricsExpandedOverlay._lyricY }
-                            text: musicModule._currentLyricIndex >= 0 && musicModule._currentLyricIndex < musicModule._lrcLines.length
-                                ? musicModule._lrcLines[musicModule._currentLyricIndex].text : musicModule.trackTitle || ""
+                            text: lyricsExpandedOverlay._lyricAnimating ? lyricsExpandedOverlay._oldCurrLine : (musicModule._currentLyricIndex >= 0 && musicModule._currentLyricIndex < musicModule._lrcLines.length
+                                ? musicModule._lrcLines[musicModule._currentLyricIndex].text : musicModule.trackTitle || "")
                             font.family: "JetBrainsMonoNL Nerd Font"
                             font.pixelSize: 16
                             font.bold: true
@@ -1113,8 +1125,8 @@ Item {
                             id: nextLine
                             opacity: lyricsExpandedOverlay._lyricOpacity
                             transform: Translate { y: lyricsExpandedOverlay._lyricY }
-                            text: musicModule._currentLyricIndex >= 0 && musicModule._currentLyricIndex + 1 < musicModule._lrcLines.length
-                                ? musicModule._lrcLines[musicModule._currentLyricIndex + 1].text : ""
+                            text: lyricsExpandedOverlay._lyricAnimating ? lyricsExpandedOverlay._oldNextLine : (musicModule._currentLyricIndex >= 0 && musicModule._currentLyricIndex + 1 < musicModule._lrcLines.length
+                                ? musicModule._lrcLines[musicModule._currentLyricIndex + 1].text : "")
                             font.family: "JetBrainsMonoNL Nerd Font"
                             font.pixelSize: 14
                             color: musicModule._coverSecondary
