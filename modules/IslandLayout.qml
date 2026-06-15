@@ -233,10 +233,31 @@ Item {
                     workspaceModule.overviewExpanded = false
                 if (networkModule.networkExpanded)
                     networkModule.networkExpanded = false
+                roundedArtTimer.restart()
             } else {
                 radiusRestoreTimer.restart()
             }
         }
+    }
+
+    property string _roundedArtPath: ""
+
+    Timer {
+        id: roundedArtTimer
+        interval: 50
+        onTriggered: {
+            var src = musicModule.trackArtUrl
+            if (!src) return
+            var out = "/tmp/waveland_art_rounded.png"
+            roundedArtProc.exec(["sh", "-c",
+                "magick \"$(echo '" + src + "' | sed 's|^file://||')\" -resize 340x340^ -gravity center -extent 340x340 \\( +clone -threshold -1 -fill white -draw 'roundrectangle 0,0 339,339 20,20' \\) -alpha off -compose copy_opacity -composite " + out])
+            layout._roundedArtPath = out
+        }
+    }
+
+    Process {
+        id: roundedArtProc
+        running: false
     }
 
     Connections {
@@ -971,7 +992,7 @@ Item {
 
                 IconImage {
                     anchors.fill: parent
-                    source: musicModule.trackArtUrl !== "" ? musicModule.trackArtUrl : ""
+                    source: layout._roundedArtPath !== "" ? "file://" + layout._roundedArtPath : (musicModule.trackArtUrl !== "" ? musicModule.trackArtUrl : "")
                     asynchronous: true
                 }
 
