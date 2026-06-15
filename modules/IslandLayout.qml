@@ -249,7 +249,7 @@ Item {
             var src = musicModule.trackArtUrl
             if (!src) return
             layout._roundedArtPath = ""
-            var cmd = "src=$(echo '" + src + "' | sed 's|^file://||'); magick \"$src\" -resize 340x340^ -gravity center -extent 340x340 \\( +clone -threshold -1 -fill white -draw 'roundrectangle 0,0 339,339 20,20' \\) -alpha off -compose copy_opacity -composite /tmp/waveland_art_rounded.png"
+            var cmd = "src=$(echo '" + src + "' | sed 's|^file://||'); magick \"$src\" -alpha set -resize 340x340^ -gravity center -extent 340x340 \\( -size 340x340 xc:black -fill white -draw 'roundrectangle 0,0 339,339 20,20' \\) -compose copy_opacity -composite /tmp/waveland_art_rounded.png"
             roundedArtProc.exec(["sh", "-c", cmd])
         }
     }
