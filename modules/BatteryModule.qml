@@ -22,8 +22,10 @@ Item {
     property bool profileMode: false
 
     onPercentageChanged: ringCanvas.requestPaint()
+    onProfileModeChanged: ringCanvas.requestPaint()
 
     function ringColor() {
+        if (profileMode) return profileColor()
         if (charging) return "#a6e3a1"
         if (percentage > 60) return "#a6e3a1"
         if (percentage > 20) return "#f9e2af"
@@ -185,7 +187,7 @@ Item {
             Text {
                 text: batteryModule.profileIcon()
                 font.family: "JetBrainsMonoNL Nerd Font"
-                font.pixelSize: 18
+                font.pixelSize: 14
                 color: batteryModule.profileColor()
                 anchors.centerIn: parent
                 visible: batteryModule.profileMode
@@ -219,21 +221,6 @@ Item {
             opacity: _opacity
             width: _opacity > 0.01 ? implicitWidth : 0
             clip: true
-        }
-
-        Text {
-            id: profileLabelText
-            text: batteryModule.profileLabel()
-            font.family: "JetBrainsMonoNL Nerd Font"
-            font.pixelSize: 13
-            color: batteryModule.profileColor()
-            anchors.verticalCenter: parent.verticalCenter
-
-            property real _opacity: batteryModule.pillHovered && batteryModule.profileMode ? 1 : 0
-            Behavior on _opacity {
-                NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
-            }
-            opacity: _opacity
         }
     }
 
