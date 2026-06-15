@@ -136,16 +136,6 @@ Item {
         spacing: 2
 
         Text {
-            text: networkModule.signalIcon()
-            font.family: "JetBrainsMonoNL Nerd Font"
-            font.pixelSize: 18
-            color: networkModule.labelColor()
-            anchors.verticalCenter: parent.verticalCenter
-            opacity: networkModule._opacity
-            visible: networkModule._opacity > 0.01
-        }
-
-        Text {
             id: networkLabel
             text: networkModule.connected ? networkModule.ssid + " " + Math.round(networkModule.signalPct) + "%" : "已断开"
             font.family: "JetBrainsMonoNL Nerd Font"
@@ -163,6 +153,16 @@ Item {
             opacity: _hoverOpacity
             width: _hoverOpacity > 0.01 ? implicitWidth : 0
             clip: true
+        }
+
+        Text {
+            text: networkModule.signalIcon()
+            font.family: "JetBrainsMonoNL Nerd Font"
+            font.pixelSize: 18
+            color: networkModule.labelColor()
+            anchors.verticalCenter: parent.verticalCenter
+            opacity: networkModule._opacity
+            visible: networkModule._opacity > 0.01
         }
     }
 
