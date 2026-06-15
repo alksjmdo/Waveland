@@ -228,6 +228,44 @@ Item {
         function onWidthChanged() { layout.recalc() }
     }
 
+    Timer {
+        id: networkRefresh
+        interval: 100
+        onTriggered: wifiScan.exec(["sh", "-c",
+            "nmcli -t -f IN-USE,SSID,SIGNAL,SECURITY dev wifi list 2>/dev/null | grep -v '^$'"])
+    }
+
+    Process {
+        id: wifiScan
+        running: false
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                wifiModel.clear()
+                var lines = text.trim().split("\n")
+                for (var i = 0; i < lines.length; i++) {
+                    var parts = lines[i].split(":")
+                    if (parts.length >= 4 && parts[1]) {
+                        wifiModel.append({
+                            inUse: parts[0] === "*",
+                            ssid: parts[1],
+                            signal: parseInt(parts[2]) || 0,
+                            security: parts[3] || "",
+                            secured: parts[3] !== "" && parts[3] !== "--"
+                        })
+                    }
+                }
+            }
+        }
+    }
+
+    ListModel { id: wifiModel }
+
+    Process {
+        id: wifiConnect
+        running: false
+    }
+
     Connections {
         target: networkModule
         function onNetworkExpandedChanged() {
@@ -683,41 +721,201 @@ Item {
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: {
                                         workspaceModule.niriAction("focus-window --id " + modelData.id)
-        }
-    }
-
-    Timer {
-        id: networkRefresh
-        interval: 100
-        onTriggered: wifiScan.exec(["sh", "-c",
-            "nmcli -t -f IN-USE,SSID,SIGNAL,SECURITY dev wifi list 2>/dev/null | grep -v '^$'"])
-    }
-
-    Process {
-        id: wifiScan
-        running: false
-
-        stdout: StdioCollector {
-            onStreamFinished: {
-                wifiModel.clear()
-                var lines = text.trim().split("\n")
-                for (var i = 0; i < lines.length; i++) {
-                    var parts = lines[i].split(":")
-                    if (parts.length >= 4 && parts[1]) {
-                        wifiModel.append({
-                            inUse: parts[0] === "*",
-                            ssid: parts[1],
-                            signal: parseInt(parts[2]) || 0,
-                            security: parts[3] || "",
-                            secured: parts[3] !== "" && parts[3] !== "--"
-                        })
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
     }
 
-    ListModel { id: wifiModel }
+    Item {
+        id: notifCenter
+        anchors.fill: parent
+
+        property real _opacity: workspaceModule.notifCenterExpanded ? 1 : 0
+        Behavior on _opacity {
+            NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
+        }
+        opacity: _opacity
+        visible: _opacity > 0.01
+
+        scale: workspaceModule.notifCenterExpanded ? 1 : 0.8
+        Behavior on scale {
+            SpringAnimation { spring: 2.0; damping: 0.5; mass: 1.0 }
+        }
+
+        property int expandedIndex: -1
+        property bool clearing: false
+
+        onClearingChanged: {
+            if (clearing) clearTimer.restart()
+        }
+
+        Timer {
+            id: clearTimer
+            interval: 200
+            onTriggered: {
+                workspaceModule._notificationHistory = []
+                workspaceModule.clearNotification = true
+                notifCenter.clearing = false
+            }
+        }
+
+        Row {
+            id: notifTopRow
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: parent.top
+            anchors.topMargin: 16
+            spacing: 8
+
+            Text {
+                id: notifIconTop
+                text: "󰂞"
+                font.family: "JetBrainsMonoNL Nerd Font"
+                font.pixelSize: 22
+                color: "#cba6f7"
+                anchors.verticalCenter: parent.verticalCenter
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: workspaceModule.notifCenterExpanded = false
+                }
+            }
+
+            ClockModule {
+                id: notifClock
+                scale: workspaceModule.notifCenterExpanded ? 0.7 : 1
+
+                Behavior on scale {
+                    SpringAnimation { spring: 2.0; damping: 0.5; mass: 1.0 }
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: workspaceModule.notifCenterExpanded = false
+                }
+            }
+
+            Text {
+                text: "󰂛"
+                font.family: "JetBrainsMonoNL Nerd Font"
+                font.pixelSize: 20
+                color: "#6c7086"
+                anchors.verticalCenter: parent.verticalCenter
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: { notifCenter.clearing = true }
+                }
+            }
+        }
+
+        ListView {
+            id: notifList
+            anchors.top: notifTopRow.bottom
+            anchors.topMargin: 12
+            anchors.left: parent.left
+            anchors.leftMargin: 16
+            anchors.right: parent.right
+            anchors.rightMargin: 16
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 12
+            clip: true
+            spacing: 6
+            opacity: notifCenter.clearing ? 0 : 1
+            Behavior on opacity {
+                NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
+            }
+            model: workspaceModule._notificationHistory
+
+            delegate: Rectangle {
+                id: notifDelegate
+                property int myIndex: index
+                property bool expanded: notifCenter.expandedIndex === myIndex
+                width: ListView.view.width
+                height: expanded ? bodyText.implicitHeight + 36 : (modelData.body && modelData.body !== "" ? 52 : 36)
+                radius: 8
+                color: "#313244"
+
+                Behavior on height {
+                    NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
+                }
+
+                Text {
+                    id: notifAppName
+                    anchors.top: parent.top
+                    anchors.topMargin: 8
+                    anchors.left: parent.left
+                    anchors.leftMargin: 10
+                    text: modelData.appName
+                    color: "#cdd6f4"
+                    font.pixelSize: 12
+                    width: Math.min(implicitWidth + 8, 90)
+                    elide: Text.ElideRight
+                }
+                Text {
+                    id: notifTime
+                    anchors.top: parent.top
+                    anchors.topMargin: 8
+                    anchors.right: parent.right
+                    anchors.rightMargin: 10
+                    text: modelData.time
+                    color: "#585b70"
+                    font.pixelSize: 11
+                }
+                Text {
+                    id: notifSummary
+                    anchors.top: parent.top
+                    anchors.topMargin: 8
+                    anchors.left: notifAppName.right
+                    anchors.leftMargin: 6
+                    anchors.right: notifTime.left
+                    anchors.rightMargin: 6
+                    text: modelData.summary
+                    color: "#a6adc8"
+                    font.pixelSize: 12
+                    elide: Text.ElideRight
+                }
+                Text {
+                    id: bodyText
+                    anchors.top: notifSummary.bottom
+                    anchors.topMargin: 4
+                    anchors.left: parent.left
+                    anchors.leftMargin: 10
+                    anchors.right: parent.right
+                    anchors.rightMargin: 10
+                    text: modelData.body || ""
+                    color: notifDelegate.expanded ? "#cdd6f4" : "#6c7086"
+                    property real thisFontSize: notifDelegate.expanded ? 15 : 11
+                    Behavior on thisFontSize {
+                        NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
+                    }
+                    font.pixelSize: thisFontSize
+                    elide: notifDelegate.expanded ? Text.ElideNone : Text.ElideRight
+                    wrapMode: notifDelegate.expanded ? Text.WordWrap : Text.NoWrap
+                    maximumLineCount: notifDelegate.expanded ? 0 : 1
+                    visible: modelData.body && modelData.body !== ""
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        if (notifCenter.expandedIndex === myIndex)
+                            notifCenter.expandedIndex = -1
+                        else
+                            notifCenter.expandedIndex = myIndex
+                    }
+                }
+            }
+        }
+    }
 
     Item {
         id: networkOverlay
@@ -956,204 +1154,6 @@ Item {
                                 passwordInput.text = ""
                             }
                         }
-                    }
-                }
-            }
-        }
-    }
-
-    Process {
-        id: wifiConnect
-        running: false
-    }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    Item {
-        id: notifCenter
-        anchors.fill: parent
-
-        property real _opacity: workspaceModule.notifCenterExpanded ? 1 : 0
-        Behavior on _opacity {
-            NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
-        }
-        opacity: _opacity
-        visible: _opacity > 0.01
-
-        scale: workspaceModule.notifCenterExpanded ? 1 : 0.8
-        Behavior on scale {
-            SpringAnimation { spring: 2.0; damping: 0.5; mass: 1.0 }
-        }
-
-        property int expandedIndex: -1
-        property bool clearing: false
-
-        onClearingChanged: {
-            if (clearing) clearTimer.restart()
-        }
-
-        Timer {
-            id: clearTimer
-            interval: 200
-            onTriggered: {
-                workspaceModule._notificationHistory = []
-                workspaceModule.clearNotification = true
-                notifCenter.clearing = false
-            }
-        }
-
-        Row {
-            id: notifTopRow
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.top: parent.top
-            anchors.topMargin: 16
-            spacing: 8
-
-            Text {
-                id: notifIconTop
-                text: "󰂞"
-                font.family: "JetBrainsMonoNL Nerd Font"
-                font.pixelSize: 22
-                color: "#cba6f7"
-                anchors.verticalCenter: parent.verticalCenter
-
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: workspaceModule.notifCenterExpanded = false
-                }
-            }
-
-            ClockModule {
-                id: notifClock
-                scale: workspaceModule.notifCenterExpanded ? 0.7 : 1
-
-                Behavior on scale {
-                    SpringAnimation { spring: 2.0; damping: 0.5; mass: 1.0 }
-                }
-
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: workspaceModule.notifCenterExpanded = false
-                }
-            }
-
-            Text {
-                text: "󰂛"
-                font.family: "JetBrainsMonoNL Nerd Font"
-                font.pixelSize: 20
-                color: "#6c7086"
-                anchors.verticalCenter: parent.verticalCenter
-
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: { notifCenter.clearing = true }
-                }
-            }
-        }
-
-        ListView {
-            id: notifList
-            anchors.top: notifTopRow.bottom
-            anchors.topMargin: 12
-            anchors.left: parent.left
-            anchors.leftMargin: 16
-            anchors.right: parent.right
-            anchors.rightMargin: 16
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: 12
-            clip: true
-            spacing: 6
-            opacity: notifCenter.clearing ? 0 : 1
-            Behavior on opacity {
-                NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
-            }
-            model: workspaceModule._notificationHistory
-
-            delegate: Rectangle {
-                id: notifDelegate
-                property int myIndex: index
-                property bool expanded: notifCenter.expandedIndex === myIndex
-                width: ListView.view.width
-                height: expanded ? bodyText.implicitHeight + 36 : (modelData.body && modelData.body !== "" ? 52 : 36)
-                radius: 8
-                color: "#313244"
-
-                Behavior on height {
-                    NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
-                }
-
-                Text {
-                    id: notifAppName
-                    anchors.top: parent.top
-                    anchors.topMargin: 8
-                    anchors.left: parent.left
-                    anchors.leftMargin: 10
-                    text: modelData.appName
-                    color: "#cdd6f4"
-                    font.pixelSize: 12
-                    width: Math.min(implicitWidth + 8, 90)
-                    elide: Text.ElideRight
-                }
-                Text {
-                    id: notifTime
-                    anchors.top: parent.top
-                    anchors.topMargin: 8
-                    anchors.right: parent.right
-                    anchors.rightMargin: 10
-                    text: modelData.time
-                    color: "#585b70"
-                    font.pixelSize: 11
-                }
-                Text {
-                    id: notifSummary
-                    anchors.top: parent.top
-                    anchors.topMargin: 8
-                    anchors.left: notifAppName.right
-                    anchors.leftMargin: 6
-                    anchors.right: notifTime.left
-                    anchors.rightMargin: 6
-                    text: modelData.summary
-                    color: "#a6adc8"
-                    font.pixelSize: 12
-                    elide: Text.ElideRight
-                }
-                Text {
-                    id: bodyText
-                    anchors.top: notifSummary.bottom
-                    anchors.topMargin: 4
-                    anchors.left: parent.left
-                    anchors.leftMargin: 10
-                    anchors.right: parent.right
-                    anchors.rightMargin: 10
-                    text: modelData.body || ""
-                    color: notifDelegate.expanded ? "#cdd6f4" : "#6c7086"
-                    property real thisFontSize: notifDelegate.expanded ? 15 : 11
-                    Behavior on thisFontSize {
-                        NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
-                    }
-                    font.pixelSize: thisFontSize
-                    elide: notifDelegate.expanded ? Text.ElideNone : Text.ElideRight
-                    wrapMode: notifDelegate.expanded ? Text.WordWrap : Text.NoWrap
-                    maximumLineCount: notifDelegate.expanded ? 0 : 1
-                    visible: modelData.body && modelData.body !== ""
-                }
-
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        if (notifCenter.expandedIndex === myIndex)
-                            notifCenter.expandedIndex = -1
-                        else
-                            notifCenter.expandedIndex = myIndex
                     }
                 }
             }
