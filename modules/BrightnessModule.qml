@@ -184,7 +184,7 @@ Item {
             color: "#cdd6f4"
             anchors.verticalCenter: parent.verticalCenter
 
-            property real _hoverOpacity: brightnessModule.pillHovered ? 1 : 0
+            property real _hoverOpacity: brightnessModule.pillHovered && brightnessModule._contentVisible ? 1 : 0
             Behavior on _hoverOpacity {
                 NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
             }
