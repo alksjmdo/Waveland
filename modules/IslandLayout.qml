@@ -382,10 +382,7 @@ Item {
                     text: "󰽰"
                     font.family: "JetBrainsMonoNL Nerd Font"
                     font.pixelSize: 20
-                    color: musicModule._coverSecondary
-                    Behavior on color {
-                        ColorAnimation { duration: 500 }
-                    }
+                    color: "#cba6f7"
                     anchors.right: parent.right
                     anchors.rightMargin: 4
                     anchors.verticalCenter: parent.verticalCenter
@@ -542,10 +539,7 @@ Item {
                         text: "󰂞"
                         font.family: "JetBrainsMonoNL Nerd Font"
                         font.pixelSize: 18
-                    color: musicModule._coverSecondary
-                    Behavior on color {
-                        ColorAnimation { duration: 500 }
-                    }
+                    color: "#cba6f7"
                         opacity: workspaceModule.notifOpacity
                         visible: workspaceModule.notifOpacity > 0.01
                         anchors.right: networkModule.left
@@ -578,10 +572,7 @@ Item {
                 width: 2
                 height: model.barHeight
                 radius: 1
-                color: musicModule._coverPrimary
-                Behavior on color {
-                    ColorAnimation { duration: 500 }
-                }
+                color: "#cba6f7"
                 anchors.verticalCenter: parent.verticalCenter
 
                 Behavior on height {
@@ -607,10 +598,7 @@ Item {
                 width: 2
                 height: model.barHeight
                 radius: 1
-                color: musicModule._coverPrimary
-                Behavior on color {
-                    ColorAnimation { duration: 500 }
-                }
+                color: "#cba6f7"
                 anchors.verticalCenter: parent.verticalCenter
 
                 Behavior on height {
@@ -886,10 +874,7 @@ Item {
                             text: workspaceModule.iconForWs(wsPill.wsId)
                             font.family: "JetBrainsMonoNL Nerd Font"
                             font.pixelSize: 20
-                color: musicModule._coverPrimary
-                Behavior on color {
-                    ColorAnimation { duration: 500 }
-                }
+                            color: "#cba6f7"
                 anchors.verticalCenter: parent.verticalCenter
 
                 Behavior on height {
