@@ -76,3 +76,5 @@ This project uses Git. See .gitignore for excluded files.
 - Update this file when project conventions change
 - **动画规范**: 所有组件的出现和消失都要加上渐隐渐现的动画（NumberAnimation on opacity, 200ms, Easing.InOutQuad）。使用独立的 `_opacity` property + Behavior 模式以确保动画可靠触发。
 - **布局规范**: 所有组件必须位于药丸的水平中线上（verticalCenter 对齐）。Layout 中使用 `Layout.alignment: Qt.AlignVCenter`，非 Layout 中使用 `anchors.verticalCenter: parent.verticalCenter`。
+- **模块布局规则**: 调整模块位置或新增模块时，必须同步更新 `recalc()` 中的 `lw`/`rw` 宽度计算，确保灵动岛宽度自动适配。测试前验证宽度计算逻辑覆盖所有模块。
+- **测试规则**: 每次用 `qs -p ~/Projects/Waveland/shell.qml` 测试后，如果 `Configuration Loaded` 成功且无 ERROR，不要 kill qs 进程，让它保持运行。
