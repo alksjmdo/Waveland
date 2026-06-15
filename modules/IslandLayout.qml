@@ -1025,14 +1025,8 @@ Item {
                     height: 40
                     radius: 8
                     color: model.inUse ? "#1e1e2e" : (wifiMouse.containsMouse ? "#313244" : "transparent")
-
-                    Rectangle {
-                        anchors.fill: parent
-                        radius: parent.radius
-                        color: "transparent"
-                        border.width: (model.inUse || wifiMouse.containsMouse) ? 1 : 0
-                        border.color: model.inUse ? "#8bd5ca" : "#cba6f7"
-                    }
+                    border.width: (model.inUse || wifiMouse.containsMouse) ? 1 : 0
+                    border.color: model.inUse ? "#8bd5ca" : "#cba6f7"
 
                     Row {
                         anchors.verticalCenter: parent.verticalCenter
