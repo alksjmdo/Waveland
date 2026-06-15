@@ -67,7 +67,7 @@ Item {
         NumberAnimation { duration: 300; easing.type: Easing.InOutQuad }
     }
 
-    property real _musicOpacity: (musicModule._showControls || musicModule.lyricsMode) && !workspaceModule.notifCenterExpanded && !networkModule.networkExpanded ? 1 : 0
+    property real _musicOpacity: (musicModule._showControls || musicModule.lyricsMode) && !workspaceModule.notifCenterExpanded && !networkModule.networkExpanded && !musicModule.lyricsExpanded ? 1 : 0
     Behavior on _musicOpacity {
         NumberAnimation { duration: 300; easing.type: Easing.InOutQuad }
     }
