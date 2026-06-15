@@ -794,14 +794,14 @@ Item {
             id: notifTopRow
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.top: parent.top
-            anchors.topMargin: 32
-            spacing: 16
+            anchors.topMargin: 24
+            spacing: 12
 
             Text {
                 id: notifIconTop
                 text: "󰂞"
                 font.family: "JetBrainsMonoNL Nerd Font"
-                font.pixelSize: 44
+                font.pixelSize: 33
                 color: "#cba6f7"
                 anchors.verticalCenter: parent.verticalCenter
 
@@ -830,7 +830,7 @@ Item {
             Text {
                 text: "󰂛"
                 font.family: "JetBrainsMonoNL Nerd Font"
-                font.pixelSize: 40
+                font.pixelSize: 30
                 color: "#6c7086"
                 anchors.verticalCenter: parent.verticalCenter
 
@@ -845,15 +845,15 @@ Item {
         ListView {
             id: notifList
             anchors.top: notifTopRow.bottom
-            anchors.topMargin: 24
+            anchors.topMargin: 18
             anchors.left: parent.left
-            anchors.leftMargin: 32
+            anchors.leftMargin: 24
             anchors.right: parent.right
-            anchors.rightMargin: 32
+            anchors.rightMargin: 24
             anchors.bottom: parent.bottom
-            anchors.bottomMargin: 24
+            anchors.bottomMargin: 18
             clip: true
-            spacing: 12
+            spacing: 10
             opacity: notifCenter.clearing ? 0 : 1
             Behavior on opacity {
                 NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
@@ -865,7 +865,7 @@ Item {
                 property int myIndex: index
                 property bool expanded: notifCenter.expandedIndex === myIndex
                 width: ListView.view.width
-                height: expanded ? bodyText.implicitHeight + 72 : (modelData.body && modelData.body !== "" ? 104 : 72)
+                height: expanded ? bodyText.implicitHeight + 54 : (modelData.body && modelData.body !== "" ? 78 : 54)
                 radius: 8
                 color: "#313244"
 
@@ -876,49 +876,49 @@ Item {
                 Text {
                     id: notifAppName
                     anchors.top: parent.top
-                    anchors.topMargin: 16
+                    anchors.topMargin: 12
                     anchors.left: parent.left
-                    anchors.leftMargin: 20
+                    anchors.leftMargin: 15
                     text: modelData.appName
                     color: "#cdd6f4"
-                    font.pixelSize: 24
-                    width: Math.min(implicitWidth + 16, 180)
+                    font.pixelSize: 18
+                    width: Math.min(implicitWidth + 12, 135)
                     elide: Text.ElideRight
                 }
                 Text {
                     id: notifTime
                     anchors.top: parent.top
-                    anchors.topMargin: 16
+                    anchors.topMargin: 12
                     anchors.right: parent.right
-                    anchors.rightMargin: 20
+                    anchors.rightMargin: 15
                     text: modelData.time
                     color: "#585b70"
-                    font.pixelSize: 22
+                    font.pixelSize: 17
                 }
                 Text {
                     id: notifSummary
                     anchors.top: parent.top
-                    anchors.topMargin: 16
+                    anchors.topMargin: 12
                     anchors.left: notifAppName.right
-                    anchors.leftMargin: 12
+                    anchors.leftMargin: 10
                     anchors.right: notifTime.left
-                    anchors.rightMargin: 12
+                    anchors.rightMargin: 10
                     text: modelData.summary
                     color: "#a6adc8"
-                    font.pixelSize: 24
+                    font.pixelSize: 18
                     elide: Text.ElideRight
                 }
                 Text {
                     id: bodyText
                     anchors.top: notifSummary.bottom
-                    anchors.topMargin: 8
+                    anchors.topMargin: 6
                     anchors.left: parent.left
-                    anchors.leftMargin: 20
+                    anchors.leftMargin: 15
                     anchors.right: parent.right
-                    anchors.rightMargin: 20
+                    anchors.rightMargin: 15
                     text: modelData.body || ""
                     color: notifDelegate.expanded ? "#cdd6f4" : "#6c7086"
-                    property real thisFontSize: notifDelegate.expanded ? 30 : 22
+                    property real thisFontSize: notifDelegate.expanded ? 22 : 16
                     Behavior on thisFontSize {
                         NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
                     }
