@@ -78,3 +78,4 @@ This project uses Git. See .gitignore for excluded files.
 - **布局规范**: 所有组件必须位于药丸的水平中线上（verticalCenter 对齐）。Layout 中使用 `Layout.alignment: Qt.AlignVCenter`，非 Layout 中使用 `anchors.verticalCenter: parent.verticalCenter`。
 - **模块布局规则**: 调整模块位置或新增模块时，必须同步更新 `recalc()` 中的 `lw`/`rw` 宽度计算，确保灵动岛宽度自动适配。测试前验证宽度计算逻辑覆盖所有模块。
 - **测试规则**: 每次用 `qs -p ~/Projects/Waveland/shell.qml` 测试后，如果 `Configuration Loaded` 成功且无 ERROR，不要 kill qs 进程，让它保持运行。
+- **代码格式规则**: 修改代码时必须确保缩进与原有代码一致，使用空格缩进（4空格为一级）。`edit` 工具匹配 `oldString` 时务必提供足够上下文避免匹配到错误位置。每次修改后必须用 `python3` 验证大括号数量平衡。
