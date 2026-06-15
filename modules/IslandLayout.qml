@@ -908,6 +908,7 @@ Item {
                     font.pixelSize: 18
                     elide: notifDelegate.expanded ? Text.ElideNone : Text.ElideRight
                     wrapMode: notifDelegate.expanded ? Text.WordWrap : Text.NoWrap
+                    maximumLineCount: notifDelegate.expanded ? 0 : 1
                 }
                 Text {
                     id: bodyText
