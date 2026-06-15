@@ -669,65 +669,95 @@ Item {
                     }
                 }
 
-                Text {
-                    text: "\uF048"
-                    font.family: "JetBrainsMonoNL Nerd Font"
-                    font.pixelSize: 16
-                    color: "#cdd6f4"
-                    anchors.verticalCenter: parent.verticalCenter
-                    opacity: layout.hovered ? 1 : 0
-                    Behavior on opacity {
+                Item {
+                    width: layout.hovered ? prevBtn.implicitWidth : 0
+                    height: 24
+                    clip: true
+                    Behavior on width {
                         NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
                     }
 
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            if (musicModule.activePlayer && musicModule.activePlayer.canGoPrevious)
-                                musicModule.activePlayer.previous()
+                    Text {
+                        id: prevBtn
+                        text: "\uF048"
+                        font.family: "JetBrainsMonoNL Nerd Font"
+                        font.pixelSize: 16
+                        color: "#cdd6f4"
+                        anchors.verticalCenter: parent.verticalCenter
+                        opacity: layout.hovered ? 1 : 0
+                        Behavior on opacity {
+                            NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                if (musicModule.activePlayer && musicModule.activePlayer.canGoPrevious)
+                                    musicModule.activePlayer.previous()
+                            }
                         }
                     }
                 }
 
-                Text {
-                    text: musicModule.isPlaying ? "\uF04D" : "\uF04B"
-                    font.family: "JetBrainsMonoNL Nerd Font"
-                    font.pixelSize: 16
-                    color: "#cba6f7"
-                    anchors.verticalCenter: parent.verticalCenter
-                    opacity: layout.hovered ? 1 : 0
-                    Behavior on opacity {
+                Item {
+                    width: layout.hovered ? playBtn.implicitWidth : 0
+                    height: 24
+                    clip: true
+                    Behavior on width {
                         NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
                     }
 
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            if (musicModule.activePlayer && musicModule.activePlayer.canTogglePlaying)
-                                musicModule.activePlayer.togglePlaying()
+                    Text {
+                        id: playBtn
+                        text: musicModule.isPlaying ? "\uF04D" : "\uF04B"
+                        font.family: "JetBrainsMonoNL Nerd Font"
+                        font.pixelSize: 16
+                        color: "#cba6f7"
+                        anchors.verticalCenter: parent.verticalCenter
+                        opacity: layout.hovered ? 1 : 0
+                        Behavior on opacity {
+                            NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                if (musicModule.activePlayer && musicModule.activePlayer.canTogglePlaying)
+                                    musicModule.activePlayer.togglePlaying()
+                            }
                         }
                     }
                 }
 
-                Text {
-                    text: "\uF051"
-                    font.family: "JetBrainsMonoNL Nerd Font"
-                    font.pixelSize: 16
-                    color: "#cdd6f4"
-                    anchors.verticalCenter: parent.verticalCenter
-                    opacity: layout.hovered ? 1 : 0
-                    Behavior on opacity {
+                Item {
+                    width: layout.hovered ? nextBtn.implicitWidth : 0
+                    height: 24
+                    clip: true
+                    Behavior on width {
                         NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
                     }
 
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            if (musicModule.activePlayer && musicModule.activePlayer.canGoNext)
-                                musicModule.activePlayer.next()
+                    Text {
+                        id: nextBtn
+                        text: "\uF051"
+                        font.family: "JetBrainsMonoNL Nerd Font"
+                        font.pixelSize: 16
+                        color: "#cdd6f4"
+                        anchors.verticalCenter: parent.verticalCenter
+                        opacity: layout.hovered ? 1 : 0
+                        Behavior on opacity {
+                            NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                if (musicModule.activePlayer && musicModule.activePlayer.canGoNext)
+                                    musicModule.activePlayer.next()
+                            }
                         }
                     }
                 }
