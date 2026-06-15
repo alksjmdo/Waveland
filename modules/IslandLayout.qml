@@ -1227,6 +1227,40 @@ Item {
                 }
             }
         }
+    }
+
+    Item {
+        id: notifCenter
+        anchors.fill: parent
+
+        property real _opacity: workspaceModule.notifCenterExpanded ? 1 : 0
+        Behavior on _opacity {
+            NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
+        }
+        opacity: _opacity
+        visible: _opacity > 0.01
+
+        scale: workspaceModule.notifCenterExpanded ? 1 : 0.8
+        Behavior on scale {
+            SpringAnimation { spring: 2.0; damping: 0.5; mass: 1.0 }
+        }
+
+        property int expandedIndex: -1
+        property bool clearing: false
+
+        onClearingChanged: {
+            if (clearing) clearTimer.restart()
+        }
+
+        Timer {
+            id: clearTimer
+            interval: 200
+            onTriggered: {
+                workspaceModule._notificationHistory = []
+                workspaceModule.clearNotification = true
+                notifCenter.clearing = false
+            }
+        }
 
         Row {
             id: notifTopRow
