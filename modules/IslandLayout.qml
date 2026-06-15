@@ -1137,9 +1137,19 @@ Item {
                             visible: text !== ""
                         }
                     }
-                }
+        }
 
-                Row {
+        MouseArea {
+            anchors.left: parent.left
+            anchors.leftMargin: 340
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            cursorShape: Qt.PointingHandCursor
+            onClicked: musicModule.toggleLyricsExpanded()
+        }
+
+        Row {
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.bottom: parent.bottom
                     anchors.bottomMargin: 18
@@ -1215,50 +1225,6 @@ Item {
                         }
                     }
                 }
-            }
-        }
-
-        MouseArea {
-            anchors.left: parent.left
-            anchors.leftMargin: 340
-            anchors.right: parent.right
-            anchors.top: parent.top
-            anchors.bottom: parent.bottom
-            cursorShape: Qt.PointingHandCursor
-            onClicked: musicModule.toggleLyricsExpanded()
-        }
-    }
-
-    Item {
-        id: notifCenter
-        anchors.fill: parent
-
-        property real _opacity: workspaceModule.notifCenterExpanded ? 1 : 0
-        Behavior on _opacity {
-            NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
-        }
-        opacity: _opacity
-        visible: _opacity > 0.01
-
-        scale: workspaceModule.notifCenterExpanded ? 1 : 0.8
-        Behavior on scale {
-            SpringAnimation { spring: 2.0; damping: 0.5; mass: 1.0 }
-        }
-
-        property int expandedIndex: -1
-        property bool clearing: false
-
-        onClearingChanged: {
-            if (clearing) clearTimer.restart()
-        }
-
-        Timer {
-            id: clearTimer
-            interval: 200
-            onTriggered: {
-                workspaceModule._notificationHistory = []
-                workspaceModule.clearNotification = true
-                notifCenter.clearing = false
             }
         }
 
