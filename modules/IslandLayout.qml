@@ -645,7 +645,7 @@ Item {
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
             width: controlsContent.implicitWidth
-            height: 24
+            height: 30
 
             Row {
                 id: controlsContent
@@ -747,9 +747,9 @@ Item {
                 }
 
                 Rectangle {
-                    width: 24
-                    height: 24
-                    radius: 10
+                    width: 30
+                    height: 30
+                    radius: 12
                     clip: true
                     color: "#313244"
                     anchors.verticalCenter: parent.verticalCenter
