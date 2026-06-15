@@ -965,6 +965,7 @@ Item {
                 width: 340
                 height: 340
                 clip: true
+                radius: 20
                 color: "#313244"
                 anchors.verticalCenter: parent.verticalCenter
 
