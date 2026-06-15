@@ -4,7 +4,7 @@ import Quickshell.Io
 
 Item {
     id: brightnessModule
-    implicitWidth: active ? row.implicitWidth : 0
+    implicitWidth: active ? iconCell.width + row.spacing + brightPct.implicitWidth : 0
     implicitHeight: 42
     width: implicitWidth
     clip: true

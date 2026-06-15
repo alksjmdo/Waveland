@@ -4,7 +4,7 @@ import Quickshell.Services.Pipewire
 
 Item {
     id: volumeModule
-    implicitWidth: active ? row.implicitWidth : 0
+    implicitWidth: active ? iconCell.width + row.spacing + volPct.implicitWidth : 0
     implicitHeight: 42
     width: implicitWidth
     clip: true
