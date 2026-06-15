@@ -444,7 +444,7 @@ Item {
                         Rectangle {
                             id: artFrame
                             width: 28
-                            height: 28
+        height: 30
                             radius: 12
                             clip: true
                             color: "#313244"
@@ -655,7 +655,7 @@ Item {
 
                 Item {
                     width: layout.hovered ? prevBtn.implicitWidth : 0
-                    height: 24
+                    height: 30
                     clip: true
                     Behavior on width {
                         NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
@@ -686,7 +686,7 @@ Item {
 
                 Item {
                     width: layout.hovered ? playBtn.implicitWidth : 0
-                    height: 24
+                    height: 30
                     clip: true
                     Behavior on width {
                         NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
@@ -717,7 +717,7 @@ Item {
 
                 Item {
                     width: layout.hovered ? nextBtn.implicitWidth : 0
-                    height: 24
+                    height: 30
                     clip: true
                     Behavior on width {
                         NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
