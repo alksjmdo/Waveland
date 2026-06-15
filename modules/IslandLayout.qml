@@ -1056,18 +1056,34 @@ Item {
                         }
                     }
 
-                    MouseArea {
-                        id: wifiMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            if (model.secured) {
-                                networkOverlay._selectedSsid = model.ssid
-                                networkOverlay._needPassword = true
-                                networkOverlay._showPassword = true
-                            } else {
-                                wifiConnect.exec(["nmcli", "dev", "wifi", "connect", model.ssid])
+                    Rectangle {
+                        anchors.right: parent.right
+                        anchors.rightMargin: 8
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: model.inUse ? 52 : 40
+                        height: 24
+                        radius: 12
+                        color: model.inUse ? "#313244" : "#89b4fa"
+
+                        Text {
+                            text: model.inUse ? "已连接" : "连接"
+                            font.pixelSize: 11
+                            color: model.inUse ? "#6c7086" : "#1e1e2e"
+                            anchors.centerIn: parent
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: model.inUse ? Qt.ArrowCursor : Qt.PointingHandCursor
+                            onClicked: {
+                                if (model.inUse) return
+                                if (model.secured) {
+                                    networkOverlay._selectedSsid = model.ssid
+                                    networkOverlay._needPassword = true
+                                    networkOverlay._showPassword = true
+                                } else {
+                                    wifiConnect.exec(["nmcli", "dev", "wifi", "connect", model.ssid])
+                                }
                             }
                         }
                     }
