@@ -237,7 +237,8 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     width: layout.leftContentWidth
                     height: parent.height
-                    Row {
+                    RowLayout {
+                        anchors.verticalCenter: parent.verticalCenter
                         spacing: layout.spacing
                         WorkspaceModule {
                             id: workspaceModule
