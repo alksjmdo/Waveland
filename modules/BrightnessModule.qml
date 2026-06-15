@@ -40,7 +40,7 @@ Item {
             _shownByHover = false
             _pctVisible = false
             _contentVisible = false
-            brightnessModule.active = false
+            _hideActiveTimer.restart()
         }
     }
 
@@ -86,7 +86,7 @@ Item {
 
     Timer {
         id: showContentTimer
-        interval: 500
+        interval: 600
         onTriggered: {
             brightnessModule._contentVisible = true
             if (brightnessModule.pillHovered) brightnessModule._pctVisible = true
@@ -100,9 +100,16 @@ Item {
             if (brightnessModule.pillHovered) {
                 hideTimer.restart()
             } else {
-                brightnessModule.active = false
+                brightnessModule._contentVisible = false
+                brightnessModule._hideActiveTimer.restart()
             }
         }
+    }
+
+    Timer {
+        id: _hideActiveTimer
+        interval: 250
+        onTriggered: brightnessModule.active = false
     }
 
     Timer {

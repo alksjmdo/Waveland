@@ -43,7 +43,7 @@ Item {
             _shownByHover = false
             _pctVisible = false
             _contentVisible = false
-            volumeModule.active = false
+            _hideActiveTimer.restart()
         }
     }
 
@@ -56,7 +56,7 @@ Item {
 
     Timer {
         id: showContentTimer
-        interval: 500
+        interval: 600
         onTriggered: {
             volumeModule._contentVisible = true
             if (volumeModule.pillHovered) volumeModule._pctVisible = true
@@ -70,9 +70,16 @@ Item {
             if (volumeModule.pillHovered) {
                 hideTimer.restart()
             } else {
-                volumeModule.active = false
+                volumeModule._contentVisible = false
+                volumeModule._hideActiveTimer.restart()
             }
         }
+    }
+
+    Timer {
+        id: _hideActiveTimer
+        interval: 250
+        onTriggered: volumeModule.active = false
     }
 
     Timer {
