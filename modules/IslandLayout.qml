@@ -961,18 +961,36 @@ Item {
             NumberAnimation { duration: 150; easing.type: Easing.InOutQuad }
         }
 
+        property real _lyricY: 0
+        Behavior on _lyricY {
+            NumberAnimation { duration: 200; easing.type: Easing.OutQuad }
+        }
+
         Connections {
             target: musicModule
             function on_CurrentLyricIndexChanged() {
-                _lyricOpacity = 0.2
-                lyricFadeTimer.restart()
+                _lyricOpacity = 0
+                _lyricY = -24
+                lyricSlideTimer.restart()
             }
         }
 
         Timer {
-            id: lyricFadeTimer
-            interval: 80
-            onTriggered: _lyricOpacity = 1
+            id: lyricSlideTimer
+            interval: 160
+            onTriggered: {
+                _lyricY = 24
+                lyricShowTimer.restart()
+            }
+        }
+
+        Timer {
+            id: lyricShowTimer
+            interval: 20
+            onTriggered: {
+                _lyricY = 0
+                _lyricOpacity = 1
+            }
         }
 
         Row {
@@ -1063,6 +1081,7 @@ Item {
                         Text {
                             id: prevLine
                             opacity: lyricsExpandedOverlay._lyricOpacity
+                            transform: Translate { y: lyricsExpandedOverlay._lyricY }
                             text: musicModule._currentLyricIndex > 0 && musicModule._currentLyricIndex <= musicModule._lrcLines.length
                                 ? musicModule._lrcLines[musicModule._currentLyricIndex - 1].text : ""
                             font.family: "JetBrainsMonoNL Nerd Font"
@@ -1077,6 +1096,7 @@ Item {
 
                         Text {
                             opacity: lyricsExpandedOverlay._lyricOpacity
+                            transform: Translate { y: lyricsExpandedOverlay._lyricY }
                             text: musicModule._currentLyricIndex >= 0 && musicModule._currentLyricIndex < musicModule._lrcLines.length
                                 ? musicModule._lrcLines[musicModule._currentLyricIndex].text : musicModule.trackTitle || ""
                             font.family: "JetBrainsMonoNL Nerd Font"
@@ -1092,6 +1112,7 @@ Item {
                         Text {
                             id: nextLine
                             opacity: lyricsExpandedOverlay._lyricOpacity
+                            transform: Translate { y: lyricsExpandedOverlay._lyricY }
                             text: musicModule._currentLyricIndex >= 0 && musicModule._currentLyricIndex + 1 < musicModule._lrcLines.length
                                 ? musicModule._lrcLines[musicModule._currentLyricIndex + 1].text : ""
                             font.family: "JetBrainsMonoNL Nerd Font"
