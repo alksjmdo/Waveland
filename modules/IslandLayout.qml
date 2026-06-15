@@ -1024,11 +1024,13 @@ Item {
                     width: ListView.view.width
                     height: 40
                     radius: 8
-                    color: model.inUse ? "#1e1e2e" : (wifiDelegate._hovered ? "#313244" : "transparent")
-                    border.width: (model.inUse || wifiDelegate._hovered) ? 1 : 0
+                    color: model.inUse ? "#1e1e2e" : (hoverHandler.hovered ? "#313244" : "transparent")
+                    border.width: (model.inUse || hoverHandler.hovered) ? 1 : 0
                     border.color: model.inUse ? "#8bd5ca" : "#cba6f7"
 
-                    property bool _hovered: false
+                    HoverHandler {
+                        id: hoverHandler
+                    }
 
                     Row {
                         anchors.verticalCenter: parent.verticalCenter
@@ -1055,10 +1057,7 @@ Item {
                     MouseArea {
                         id: wifiMouse
                         anchors.fill: parent
-                        hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onEntered: wifiDelegate._hovered = true
-                        onExited: wifiDelegate._hovered = false
                         onClicked: {
                             if (model.secured) {
                                 networkOverlay._selectedSsid = model.ssid
