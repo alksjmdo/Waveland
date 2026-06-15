@@ -18,10 +18,9 @@ Item {
     property bool pillHovered: false
     property bool _ready: false
     property bool _shownByHover: false
+    property bool _contentVisible: false
 
-    property var audio: Pipewire.defaultAudioSink.audio
-
-    property real _opacity: active ? 1 : 0
+    property real _opacity: _contentVisible ? 1 : 0
     Behavior on _opacity {
         NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
     }
@@ -32,6 +31,7 @@ Item {
             volumeModule.show()
         } else if (_shownByHover) {
             _shownByHover = false
+            _contentVisible = false
             volumeModule.active = false
         }
     }
@@ -41,6 +41,12 @@ Item {
         interval: 1000
         running: true
         onTriggered: volumeModule._ready = true
+    }
+
+    Timer {
+        id: showContentTimer
+        interval: 220
+        onTriggered: volumeModule._contentVisible = true
     }
 
     Timer {
@@ -62,7 +68,9 @@ Item {
     }
 
     function show() {
+        _contentVisible = false
         if (!active) volumeModule.active = true
+        showContentTimer.restart()
         hideTimer.restart()
         repaintTimer.restart()
     }
