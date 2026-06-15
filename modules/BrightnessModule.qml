@@ -29,6 +29,7 @@ Item {
     }
 
     property double brightness: 0
+    property bool _ready: false
 
     onPillHoveredChanged: {
         if (pillHovered) {
@@ -53,9 +54,11 @@ Item {
                     var m = parseFloat(parts[1])
                     if (!isNaN(b) && !isNaN(m) && m > 0) {
                         var newB = b / m
-                        if (brightnessModule.brightness !== newB) {
+                        if (brightnessModule._ready && brightnessModule.brightness !== newB) {
                             brightnessModule.brightness = newB
                             brightnessModule.showBrightness()
+                        } else if (!brightnessModule._ready) {
+                            brightnessModule.brightness = newB
                         }
                     }
                 }
@@ -70,6 +73,13 @@ Item {
         repeat: true
         onTriggered: backlightProc.exec(["sh", "-c",
             "cat /sys/class/backlight/*/brightness; cat /sys/class/backlight/*/max_brightness"])
+    }
+
+    Timer {
+        id: readyTimer
+        interval: 1000
+        running: true
+        onTriggered: brightnessModule._ready = true
     }
 
     Timer {

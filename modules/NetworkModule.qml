@@ -31,6 +31,7 @@ Item {
     property double signalPct: 0
     property string ssid: ""
     property bool connected: false
+    property bool _ready: false
 
     onPillHoveredChanged: {
         if (pillHovered) {
@@ -59,7 +60,7 @@ Item {
                         networkModule.connected = conn
                         networkModule.signalPct = pct
                         networkModule.ssid = name
-                        networkModule.showNetwork()
+                        if (networkModule._ready) networkModule.showNetwork()
                     }
                 }
             }
@@ -75,6 +76,13 @@ Item {
             "nmcli -t -f WIFI g 2>/dev/null | grep -q enabled && echo 1 || echo 0;" +
             "nmcli -t -f IN-USE,SIGNAL,SSID dev wifi list 2>/dev/null | grep '^\\*' | cut -d: -f2;" +
             "nmcli -t -f IN-USE,SIGNAL,SSID dev wifi list 2>/dev/null | grep '^\\*' | cut -d: -f3"])
+    }
+
+    Timer {
+        id: readyTimer
+        interval: 2000
+        running: true
+        onTriggered: networkModule._ready = true
     }
 
     function show() {
@@ -101,7 +109,7 @@ Item {
         id: hideTimer
         interval: 3000
         onTriggered: {
-            if (networkModule.pillHovered) {
+            if (networkModule.pillHovered || !networkModule.connected) {
                 hideTimer.restart()
             } else {
                 networkModule._contentVisible = false
