@@ -232,32 +232,9 @@ Item {
                     workspaceModule.overviewExpanded = false
                 if (networkModule.networkExpanded)
                     networkModule.networkExpanded = false
-                roundedArtTimer.restart()
             } else {
                 radiusRestoreTimer.restart()
             }
-        }
-    }
-
-    property string _roundedArtPath: ""
-
-    Timer {
-        id: roundedArtTimer
-        interval: 50
-        onTriggered: {
-            var src = musicModule.trackArtUrl
-            if (!src) return
-            layout._roundedArtPath = ""
-            var cmd = "src=$(echo '" + src + "' | sed 's|^file://||'); magick \"$src\" -alpha set -resize 340x340^ -gravity center -extent 340x340 \\( -size 340x340 xc:black -fill white -draw 'roundrectangle 0,0 339,339 20,20' \\) -compose copy_opacity -composite /tmp/waveland_art_rounded.png"
-            roundedArtProc.exec(["sh", "-c", cmd])
-        }
-    }
-
-    Process {
-        id: roundedArtProc
-        running: false
-        onRunningChanged: {
-            if (!running) layout._roundedArtPath = "/tmp/waveland_art_rounded.png"
         }
     }
 
@@ -987,13 +964,17 @@ Item {
                 width: 340
                 height: 340
                 clip: true
-                radius: 20
-                color: "#313244"
+                color: musicModule._coverTertiary
                 anchors.verticalCenter: parent.verticalCenter
+                Behavior on color {
+                    ColorAnimation { duration: 500 }
+                }
 
                 IconImage {
-                    anchors.fill: parent
-                    source: layout._roundedArtPath !== "" ? "file://" + layout._roundedArtPath : (musicModule.trackArtUrl !== "" ? musicModule.trackArtUrl : "")
+                    anchors.centerIn: parent
+                    width: 272
+                    height: 272
+                    source: musicModule.trackArtUrl !== "" ? musicModule.trackArtUrl : ""
                     asynchronous: true
                 }
 
