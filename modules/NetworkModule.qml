@@ -18,6 +18,7 @@ Item {
     property bool pillHovered: false
     property bool _shownByHover: false
     property bool _contentVisible: false
+    property bool _pctVisible: false
     property bool networkExpanded: false
 
     on_ContentVisibleChanged: {
@@ -40,6 +41,7 @@ Item {
             networkModule.show()
         } else if (_shownByHover) {
             _shownByHover = false
+            _pctVisible = false
             _contentVisible = false
         }
     }
@@ -109,7 +111,10 @@ Item {
     Timer {
         id: showContentTimer
         interval: 600
-        onTriggered: networkModule._contentVisible = true
+        onTriggered: {
+            networkModule._contentVisible = true
+            if (networkModule.pillHovered) networkModule._pctVisible = true
+        }
     }
 
     Timer {
@@ -149,7 +154,7 @@ Item {
             color: networkModule.labelColor()
             anchors.verticalCenter: parent.verticalCenter
 
-            property real _hoverOpacity: networkModule.pillHovered ? 1 : 0
+            property real _hoverOpacity: networkModule._pctVisible ? 1 : 0
             Behavior on _hoverOpacity {
                 NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
             }
