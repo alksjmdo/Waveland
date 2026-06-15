@@ -884,11 +884,8 @@ Item {
                             font.family: "JetBrainsMonoNL Nerd Font"
                             font.pixelSize: 20
                             color: "#cba6f7"
-                anchors.verticalCenter: parent.verticalCenter
-
-                Behavior on height {
-                    NumberAnimation { duration: 80; easing.type: Easing.OutQuad }
-                }
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
 
                         Repeater {
                             model: workspaceModule.windowsOfWs(wsPill.wsId)
@@ -1293,7 +1290,6 @@ Item {
                 pillRadius = 0
         }
     }
-}
 }
 }
 }
