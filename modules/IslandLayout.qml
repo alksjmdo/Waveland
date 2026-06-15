@@ -649,25 +649,9 @@ Item {
 
             Row {
                 id: controlsContent
-                anchors.left: parent.left
+                anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: 4
-
-                Rectangle {
-                    width: 24
-                    height: 24
-                    radius: 10
-                    clip: true
-                    color: "#313244"
-                    anchors.verticalCenter: parent.verticalCenter
-
-                    IconImage {
-                        anchors.fill: parent
-                        anchors.margins: 2
-                        source: musicModule.trackArtUrl !== "" ? musicModule.trackArtUrl : ""
-                        asynchronous: true
-                    }
-                }
 
                 Item {
                     width: layout.hovered ? prevBtn.implicitWidth : 0
@@ -759,6 +743,22 @@ Item {
                                     musicModule.activePlayer.next()
                             }
                         }
+                    }
+                }
+
+                Rectangle {
+                    width: 24
+                    height: 24
+                    radius: 10
+                    clip: true
+                    color: "#313244"
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    IconImage {
+                        anchors.fill: parent
+                        anchors.margins: 2
+                        source: musicModule.trackArtUrl !== "" ? musicModule.trackArtUrl : ""
+                        asynchronous: true
                     }
                 }
             }
