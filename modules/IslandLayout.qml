@@ -646,6 +646,11 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             spacing: 4
 
+            property real _hoverOpacity: layout.hovered ? 1 : 0
+            Behavior on _hoverOpacity {
+                NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
+            }
+
             Rectangle {
                 width: 24
                 height: 24
@@ -668,6 +673,13 @@ Item {
                 font.pixelSize: 16
                 color: "#cdd6f4"
                 anchors.verticalCenter: parent.verticalCenter
+                opacity: lyricsControlsRow._hoverOpacity
+                visible: lyricsControlsRow._hoverOpacity > 0.01
+                Behavior on width {
+                    NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
+                }
+                width: lyricsControlsRow._hoverOpacity > 0.01 ? implicitWidth : 0
+                clip: true
 
                 MouseArea {
                     anchors.fill: parent
@@ -685,6 +697,13 @@ Item {
                 font.pixelSize: 16
                 color: "#cba6f7"
                 anchors.verticalCenter: parent.verticalCenter
+                opacity: lyricsControlsRow._hoverOpacity
+                visible: lyricsControlsRow._hoverOpacity > 0.01
+                Behavior on width {
+                    NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
+                }
+                width: lyricsControlsRow._hoverOpacity > 0.01 ? implicitWidth : 0
+                clip: true
 
                 MouseArea {
                     anchors.fill: parent
@@ -702,6 +721,13 @@ Item {
                 font.pixelSize: 16
                 color: "#cdd6f4"
                 anchors.verticalCenter: parent.verticalCenter
+                opacity: lyricsControlsRow._hoverOpacity
+                visible: lyricsControlsRow._hoverOpacity > 0.01
+                Behavior on width {
+                    NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
+                }
+                width: lyricsControlsRow._hoverOpacity > 0.01 ? implicitWidth : 0
+                clip: true
 
                 MouseArea {
                     anchors.fill: parent
