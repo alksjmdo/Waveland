@@ -4,8 +4,10 @@ import Quickshell.Io
 
 Item {
     id: batteryModule
+    implicitWidth: row.implicitWidth
+    implicitHeight: 42
     width: row.implicitWidth
-    height: row.implicitHeight
+    height: 42
 
     Behavior on width {
         NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
