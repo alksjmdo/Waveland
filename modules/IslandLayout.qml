@@ -114,18 +114,18 @@ Item {
             targetHeight = 42
             return
         }
+        if (musicModule.lyricsExpanded) {
+            targetWidth = 600
+            targetHeight = 340
+            pillRadius = 20
+            return
+        }
         if (musicModule.lyricsMode) {
             pillRadius = 0
             var lyricsContentW = lyricsNoteIcon.implicitWidth + 8 + lyricDisplayText.implicitWidth + 8 + controlsContent.implicitWidth
             var totalW = leftWaves.implicitWidth + rightWaves.implicitWidth + lyricsContentW + 52
             targetWidth = Math.max(300, totalW)
             targetHeight = 42 + (hovered ? hoverBonusH : 0)
-            return
-        }
-        if (musicModule.lyricsExpanded) {
-            targetWidth = 600
-            targetHeight = 340
-            pillRadius = 20
             return
         }
         var lw = 0
@@ -650,7 +650,7 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         height: 28
 
-        property real _opacity: musicModule.lyricsMode ? 1 : 0
+        property real _opacity: musicModule.lyricsMode && !musicModule.lyricsExpanded ? 1 : 0
         Behavior on _opacity {
             NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
         }
