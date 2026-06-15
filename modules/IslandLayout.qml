@@ -135,9 +135,10 @@ Item {
                 if (j < rlist.length - 1) rw += spacing
             }
         }
+        lw += spacing + batteryModule.width
+        rw += spacing + spacing + notifBell.implicitWidth
         leftContentWidth = lw
         rightContentWidth = rw
-        rw += spacing + batteryModule.width + spacing + notifBell.implicitWidth
         if (musicModule.isPlaying) {
             lw += spacing + 20
             var artW = layout.hovered ? 100 : 28
@@ -236,11 +237,14 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     width: layout.leftContentWidth
                     height: parent.height
-                    RowLayout {
-                        anchors.fill: parent
+                    Row {
                         spacing: layout.spacing
                         WorkspaceModule {
                             id: workspaceModule
+                        }
+                        BatteryModule {
+                            id: batteryModule
+                            pillHovered: layout.hovered
                         }
                         MusicModule {
                             id: musicModule
@@ -396,13 +400,6 @@ Item {
                         anchors.right: parent.right
                         anchors.verticalCenter: parent.verticalCenter
                     }
-                    BatteryModule {
-                        id: batteryModule
-                        pillHovered: layout.hovered
-                        anchors.right: trayModule.left
-                        anchors.rightMargin: 4
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
                     Text {
                         id: notifBell
                         text: "󰂞"
@@ -411,7 +408,7 @@ Item {
                         color: "#cba6f7"
                         opacity: workspaceModule.notifOpacity
                         visible: workspaceModule.notifOpacity > 0.01
-                        anchors.right: batteryModule.left
+                        anchors.right: trayModule.left
                         anchors.rightMargin: 4
                         anchors.verticalCenter: parent.verticalCenter
 
