@@ -955,12 +955,6 @@ Item {
         opacity: _opacity
         visible: _opacity > 0.01
 
-        Rectangle {
-            anchors.fill: parent
-            radius: 16
-            color: "#1e1e2e"
-        }
-
         Item {
             anchors.fill: parent
             anchors.margins: 24
