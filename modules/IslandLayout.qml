@@ -572,7 +572,10 @@ Item {
                 width: 2
                 height: model.barHeight
                 radius: 1
-                color: "#cba6f7"
+                color: musicModule.lyricsMode ? musicModule._coverPrimary : "#cba6f7"
+                Behavior on color {
+                    ColorAnimation { duration: 500 }
+                }
                 anchors.verticalCenter: parent.verticalCenter
 
                 Behavior on height {
@@ -598,7 +601,10 @@ Item {
                 width: 2
                 height: model.barHeight
                 radius: 1
-                color: "#cba6f7"
+                color: musicModule.lyricsMode ? musicModule._coverPrimary : "#cba6f7"
+                Behavior on color {
+                    ColorAnimation { duration: 500 }
+                }
                 anchors.verticalCenter: parent.verticalCenter
 
                 Behavior on height {
