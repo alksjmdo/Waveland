@@ -135,20 +135,6 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         spacing: 2
 
-        property bool _canToggle: networkModule.pillHovered
-        on_CanToggleChanged: {
-            if (!_canToggle) networkModule.networkExpanded = false
-        }
-
-        MouseArea {
-            anchors.fill: parent
-            cursorShape: _canToggle ? Qt.PointingHandCursor : Qt.ArrowCursor
-            onClicked: {
-                if (networkModule.pillHovered)
-                    networkModule.networkExpanded = !networkModule.networkExpanded
-            }
-        }
-
         Text {
             text: networkModule.signalIcon()
             font.family: "JetBrainsMonoNL Nerd Font"
@@ -177,6 +163,15 @@ Item {
             opacity: _hoverOpacity
             width: _hoverOpacity > 0.01 ? implicitWidth : 0
             clip: true
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
+            onClicked: {
+                if (networkModule.pillHovered)
+                    networkModule.networkExpanded = !networkModule.networkExpanded
+            }
         }
     }
 }
