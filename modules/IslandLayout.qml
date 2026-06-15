@@ -242,24 +242,28 @@ Item {
         stdout: StdioCollector {
             onStreamFinished: {
                 var seen = {}
-                var items = []
                 var lines = text.trim().split("\n")
                 for (var i = 0; i < lines.length; i++) {
                     var parts = lines[i].split(":")
                     if (parts.length < 4 || !parts[1]) continue
                     var ssid = parts[1]
                     var sig = parseInt(parts[2]) || 0
-                    if (seen[ssid] !== undefined) {
-                        if (sig > seen[ssid]) seen[ssid] = sig
-                        continue
+                    var inUse = parts[0] === "*"
+                    if (seen[ssid] === undefined) {
+                        seen[ssid] = { signal: sig, inUse: inUse }
+                    } else {
+                        if (sig > seen[ssid].signal) seen[ssid].signal = sig
+                        if (inUse) seen[ssid].inUse = true
                     }
-                    seen[ssid] = sig
+                }
+                var items = []
+                for (var key in seen) {
                     items.push({
-                        inUse: parts[0] === "*",
-                        ssid: ssid,
-                        signal: sig,
-                        security: parts[3] || "",
-                        secured: parts[3] !== "" && parts[3] !== "--"
+                        inUse: seen[key].inUse,
+                        ssid: key,
+                        signal: seen[key].signal,
+                        security: "",
+                        secured: false
                     })
                 }
                 items.sort(function(a, b) { return b.signal - a.signal })
