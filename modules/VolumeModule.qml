@@ -16,6 +16,7 @@ Item {
     property alias component: volumeModule
     property bool active: false
     property bool pillHovered: false
+    property bool _ready: false
 
     property var audio: Pipewire.defaultAudioSink.audio
 
@@ -33,6 +34,13 @@ Item {
     }
 
     Timer {
+        id: readyTimer
+        interval: 1000
+        running: true
+        onTriggered: volumeModule._ready = true
+    }
+
+    Timer {
         id: hideTimer
         interval: 3000
         onTriggered: {
@@ -45,8 +53,12 @@ Item {
 
     Connections {
         target: Pipewire.defaultAudioSink.audio
-        function onVolumeChanged() { volumeModule.show() }
-        function onMutedChanged() { volumeModule.show() }
+        function onVolumeChanged() {
+            if (volumeModule._ready) volumeModule.show()
+        }
+        function onMutedChanged() {
+            if (volumeModule._ready) volumeModule.show()
+        }
     }
 
     Timer {
