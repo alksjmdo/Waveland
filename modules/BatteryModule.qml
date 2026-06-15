@@ -110,7 +110,7 @@ Item {
 
     Timer {
         id: profileExitTimer
-        interval: 3000
+        interval: 5000
         onTriggered: batteryModule.profileMode = false
     }
 
