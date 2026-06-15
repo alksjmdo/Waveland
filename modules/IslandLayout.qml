@@ -115,7 +115,7 @@ Item {
             return
         }
         if (musicModule.lyricsExpanded) {
-            targetWidth = 600
+            targetWidth = 620
             targetHeight = 340
             pillRadius = 20
             return
@@ -233,6 +233,8 @@ Item {
                     workspaceModule.overviewExpanded = false
                 if (networkModule.networkExpanded)
                     networkModule.networkExpanded = false
+            } else {
+                radiusRestoreTimer.restart()
             }
         }
     }
@@ -960,9 +962,8 @@ Item {
             spacing: 0
 
             Rectangle {
-                width: 220
+                width: 240
                 height: parent.height
-                radius: 20
                 clip: true
                 color: "#313244"
 
@@ -980,7 +981,7 @@ Item {
             }
 
             Item {
-                width: parent.width - 220
+                width: parent.width - 240
                 height: parent.height
 
                 Column {
