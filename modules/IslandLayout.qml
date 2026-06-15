@@ -123,9 +123,9 @@ Item {
             return
         }
         if (musicModule.lyricsExpanded) {
-            targetWidth = 680
-            targetHeight = 320
-            pillRadius = 16
+            targetWidth = 600
+            targetHeight = 340
+            pillRadius = 20
             return
         }
         var lw = 0
@@ -955,136 +955,200 @@ Item {
         opacity: _opacity
         visible: _opacity > 0.01
 
-        Item {
+        Row {
             anchors.fill: parent
-            anchors.margins: 24
+            spacing: 0
 
-            Row {
-                anchors.fill: parent
-                spacing: 20
+            Rectangle {
+                width: 220
+                height: parent.height
+                radius: 20
+                clip: true
+                color: "#313244"
 
-                Rectangle {
-                    width: 160
-                    height: 160
-                    radius: 16
-                    clip: true
-                    color: "#313244"
-                    anchors.verticalCenter: parent.verticalCenter
-
-                    IconImage {
-                        anchors.fill: parent
-                        anchors.margins: 4
-                        source: musicModule.trackArtUrl !== "" ? musicModule.trackArtUrl : ""
-                        asynchronous: true
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: musicModule.toggleLyricsExpanded()
-                    }
+                IconImage {
+                    anchors.fill: parent
+                    source: musicModule.trackArtUrl !== "" ? musicModule.trackArtUrl : ""
+                    asynchronous: true
                 }
 
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: musicModule.toggleLyricsExpanded()
+                }
+            }
+
+            Item {
+                width: parent.width - 220
+                height: parent.height
+
                 Column {
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: 12
+                    anchors.left: parent.left
+                    anchors.leftMargin: 28
+                    anchors.right: parent.right
+                    anchors.rightMargin: 28
+                    anchors.top: parent.top
+                    anchors.topMargin: 24
 
                     Text {
-                        text: musicModule.trackTitle ? musicModule.trackTitle + " - " + musicModule.trackArtist : ""
+                        id: expandedTitle
+                        text: musicModule.trackTitle || ""
                         font.family: "JetBrainsMonoNL Nerd Font"
-                        font.pixelSize: 18
+                        font.pixelSize: 20
+                        font.bold: true
                         color: musicModule._coverText
                         Behavior on color {
                             ColorAnimation { duration: 500 }
                         }
-                        width: 440
+                        width: parent.width
                         elide: Text.ElideRight
                     }
 
-                    Item {
-                        width: 440
-                        height: 160
-                        clip: true
-
-                        ListView {
-                            id: lyricsScroll
-                            anchors.fill: parent
-                            spacing: 6
-                            model: musicModule._lrcLines
-                            currentIndex: musicModule._currentLyricIndex
-
-                            delegate: Text {
-                                width: ListView.view.width
-                                text: modelData.text
-                                font.family: "JetBrainsMonoNL Nerd Font"
-                                font.pixelSize: 16
-                                color: index === musicModule._currentLyricIndex ? musicModule._coverText : musicModule._coverSecondary
-                                Behavior on color {
-                                    ColorAnimation { duration: 500 }
-                                }
-                                horizontalAlignment: Text.AlignHCenter
-                            }
+                    Text {
+                        text: musicModule.trackArtist || ""
+                        font.family: "JetBrainsMonoNL Nerd Font"
+                        font.pixelSize: 14
+                        color: musicModule._coverSecondary
+                        Behavior on color {
+                            ColorAnimation { duration: 500 }
                         }
+                        width: parent.width
+                        elide: Text.ElideRight
                     }
+                }
 
-                    Row {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        spacing: 16
+                Rectangle {
+                    anchors.left: parent.left
+                    anchors.leftMargin: 28
+                    anchors.right: parent.right
+                    anchors.rightMargin: 28
+                    anchors.top: parent.top
+                    anchors.topMargin: 80
+                    anchors.bottom: parent.bottom
+                    anchors.bottomMargin: 74
+                    radius: 12
+                    color: "#313244"
+
+                    Column {
+                        anchors.centerIn: parent
+                        spacing: 6
 
                         Text {
-                            text: "\uF048"
+                            id: prevLine
+                            text: musicModule._currentLyricIndex > 0 && musicModule._currentLyricIndex <= musicModule._lrcLines.length
+                                ? musicModule._lrcLines[musicModule._currentLyricIndex - 1].text : ""
                             font.family: "JetBrainsMonoNL Nerd Font"
-                            font.pixelSize: 22
+                            font.pixelSize: 14
                             color: musicModule._coverSecondary
                             Behavior on color {
                                 ColorAnimation { duration: 500 }
                             }
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            visible: text !== ""
+                        }
 
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    if (musicModule.activePlayer && musicModule.activePlayer.canGoPrevious)
-                                        musicModule.activePlayer.previous()
-                                }
+                        Text {
+                            text: musicModule._currentLyricIndex >= 0 && musicModule._currentLyricIndex < musicModule._lrcLines.length
+                                ? musicModule._lrcLines[musicModule._currentLyricIndex].text : musicModule.trackTitle || ""
+                            font.family: "JetBrainsMonoNL Nerd Font"
+                            font.pixelSize: 16
+                            font.bold: true
+                            color: musicModule._coverText
+                            Behavior on color {
+                                ColorAnimation { duration: 500 }
                             }
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+
+                        Text {
+                            id: nextLine
+                            text: musicModule._currentLyricIndex >= 0 && musicModule._currentLyricIndex + 1 < musicModule._lrcLines.length
+                                ? musicModule._lrcLines[musicModule._currentLyricIndex + 1].text : ""
+                            font.family: "JetBrainsMonoNL Nerd Font"
+                            font.pixelSize: 14
+                            color: musicModule._coverSecondary
+                            Behavior on color {
+                                ColorAnimation { duration: 500 }
+                            }
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            visible: text !== ""
+                        }
+                    }
+                }
+
+                Row {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.bottom: parent.bottom
+                    anchors.bottomMargin: 18
+                    spacing: 14
+
+                    Text {
+                        text: "\uF048"
+                        font.family: "JetBrainsMonoNL Nerd Font"
+                        font.pixelSize: 16
+                        color: musicModule._coverSecondary
+                        Behavior on color {
+                            ColorAnimation { duration: 500 }
+                        }
+                        anchors.verticalCenter: parent.verticalCenter
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                if (musicModule.activePlayer && musicModule.activePlayer.canGoPrevious)
+                                    musicModule.activePlayer.previous()
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        width: 38
+                        height: 38
+                        radius: 19
+                        color: musicModule._coverTertiary
+                        Behavior on color {
+                            ColorAnimation { duration: 500 }
                         }
 
                         Text {
                             text: musicModule.isPlaying ? "\uF04D" : "\uF04B"
                             font.family: "JetBrainsMonoNL Nerd Font"
-                            font.pixelSize: 28
+                            font.pixelSize: 16
                             color: musicModule._coverPrimary
                             Behavior on color {
                                 ColorAnimation { duration: 500 }
                             }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    if (musicModule.activePlayer && musicModule.activePlayer.canTogglePlaying)
-                                        musicModule.activePlayer.togglePlaying()
-                                }
-                            }
+                            anchors.centerIn: parent
                         }
 
-                        Text {
-                            text: "\uF051"
-                            font.family: "JetBrainsMonoNL Nerd Font"
-                            font.pixelSize: 22
-                            color: musicModule._coverSecondary
-                            Behavior on color {
-                                ColorAnimation { duration: 500 }
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                if (musicModule.activePlayer && musicModule.activePlayer.canTogglePlaying)
+                                    musicModule.activePlayer.togglePlaying()
                             }
+                        }
+                    }
 
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    if (musicModule.activePlayer && musicModule.activePlayer.canGoNext)
-                                        musicModule.activePlayer.next()
-                                }
+                    Text {
+                        text: "\uF051"
+                        font.family: "JetBrainsMonoNL Nerd Font"
+                        font.pixelSize: 16
+                        color: musicModule._coverSecondary
+                        Behavior on color {
+                            ColorAnimation { duration: 500 }
+                        }
+                        anchors.verticalCenter: parent.verticalCenter
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                if (musicModule.activePlayer && musicModule.activePlayer.canGoNext)
+                                    musicModule.activePlayer.next()
                             }
                         }
                     }
@@ -1093,7 +1157,11 @@ Item {
         }
 
         MouseArea {
-            anchors.fill: parent
+            anchors.left: parent.left
+            anchors.leftMargin: 220
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
             cursorShape: Qt.PointingHandCursor
             onClicked: musicModule.toggleLyricsExpanded()
         }
