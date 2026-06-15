@@ -23,6 +23,7 @@ Item {
 
     onPercentageChanged: ringCanvas.requestPaint()
     onProfileModeChanged: ringCanvas.requestPaint()
+    onPowerProfileChanged: ringCanvas.requestPaint()
 
     function ringColor() {
         if (profileMode) return profileColor()
@@ -58,6 +59,7 @@ Item {
 
     function cycleProfile() {
         var next = profileNext()
+        batteryModule.powerProfile = next
         profileProc.exec(["powerprofilesctl", "set", next])
     }
 
@@ -121,6 +123,7 @@ Item {
         } else {
             cycleProfile()
             profileExitTimer.restart()
+            ringCanvas.requestPaint()
         }
     }
 
