@@ -122,6 +122,12 @@ Item {
             targetHeight = 42 + (hovered ? hoverBonusH : 0)
             return
         }
+        if (musicModule.lyricsExpanded) {
+            targetWidth = 680
+            targetHeight = 320
+            pillRadius = 16
+            return
+        }
         var lw = 0
         var rw = 0
         if (registry) {
@@ -176,6 +182,12 @@ Item {
                     brightnessModule.show()
                 }
             }
+            if (workspaceModule.notifCenterExpanded) {
+                if (musicModule.lyricsMode)
+                    musicModule.exitLyricsMode()
+                if (musicModule.lyricsExpanded)
+                    musicModule.lyricsExpanded = false
+            }
         }
         function onNotifActiveChanged() {
             layout.recalc()
@@ -194,6 +206,8 @@ Item {
                     workspaceModule.notifCenterExpanded = false
                 if (musicModule.lyricsMode)
                     musicModule.exitLyricsMode()
+                if (musicModule.lyricsExpanded)
+                    musicModule.lyricsExpanded = false
                 workspaceModule.resolveAllIcons()
             } else if (layout.hovered) {
                 volumeModule.show()
@@ -209,6 +223,17 @@ Item {
         }
         function onLyricsModeChanged() {
             layout.recalc()
+        }
+        function onLyricsExpandedChanged() {
+            layout.recalc()
+            if (musicModule.lyricsExpanded) {
+                if (workspaceModule.notifCenterExpanded)
+                    workspaceModule.notifCenterExpanded = false
+                if (workspaceModule.overviewExpanded)
+                    workspaceModule.overviewExpanded = false
+                if (networkModule.networkExpanded)
+                    networkModule.networkExpanded = false
+            }
         }
     }
 
@@ -309,6 +334,8 @@ Item {
                     workspaceModule.overviewExpanded = false
                 if (musicModule.lyricsMode)
                     musicModule.exitLyricsMode()
+                if (musicModule.lyricsExpanded)
+                    musicModule.lyricsExpanded = false
                 networkRefresh.restart()
             }
         }
@@ -328,7 +355,7 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         height: parent.height
 
-        property real _opacity: (workspaceModule.notifCenterExpanded || musicModule.lyricsMode || workspaceModule.overviewExpanded || networkModule.networkExpanded) ? 0 : 1
+        property real _opacity: (workspaceModule.notifCenterExpanded || musicModule.lyricsMode || musicModule.lyricsExpanded || workspaceModule.overviewExpanded || networkModule.networkExpanded) ? 0 : 1
         Behavior on _opacity {
             NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
         }
@@ -798,6 +825,12 @@ Item {
             font.family: "JetBrainsMonoNL Nerd Font"
 
             onImplicitWidthChanged: layout.recalc()
+
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: musicModule.toggleLyricsExpanded()
+            }
         }
     }
 
@@ -908,6 +941,155 @@ Item {
                     }
                 }
             }
+        }
+    }
+
+    Item {
+        id: lyricsExpandedOverlay
+        anchors.fill: parent
+
+        property real _opacity: musicModule.lyricsExpanded ? 1 : 0
+        Behavior on _opacity {
+            NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
+        }
+        opacity: _opacity
+        visible: _opacity > 0.01
+
+        Item {
+            anchors.fill: parent
+            anchors.margins: 24
+
+            Row {
+                anchors.fill: parent
+                spacing: 20
+
+                Rectangle {
+                    width: 160
+                    height: 160
+                    radius: 16
+                    clip: true
+                    color: "#313244"
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    IconImage {
+                        anchors.fill: parent
+                        anchors.margins: 4
+                        source: musicModule.trackArtUrl !== "" ? musicModule.trackArtUrl : ""
+                        asynchronous: true
+                    }
+                }
+
+                Column {
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 12
+
+                    Text {
+                        text: musicModule.trackTitle ? musicModule.trackTitle + " - " + musicModule.trackArtist : ""
+                        font.family: "JetBrainsMonoNL Nerd Font"
+                        font.pixelSize: 18
+                        color: musicModule._coverText
+                        Behavior on color {
+                            ColorAnimation { duration: 500 }
+                        }
+                        width: 440
+                        elide: Text.ElideRight
+                    }
+
+                    Item {
+                        width: 440
+                        height: 100
+                        clip: true
+
+                        ListView {
+                            id: lyricsScroll
+                            anchors.fill: parent
+                            spacing: 6
+                            model: musicModule._lrcLines
+                            currentIndex: musicModule._currentLyricIndex
+
+                            delegate: Text {
+                                width: ListView.view.width
+                                text: modelData.text
+                                font.family: "JetBrainsMonoNL Nerd Font"
+                                font.pixelSize: 16
+                                color: index === musicModule._currentLyricIndex ? musicModule._coverText : musicModule._coverSecondary
+                                Behavior on color {
+                                    ColorAnimation { duration: 500 }
+                                }
+                                horizontalAlignment: Text.AlignHCenter
+                            }
+                        }
+                    }
+
+                    Row {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        spacing: 16
+
+                        Text {
+                            text: "\uF048"
+                            font.family: "JetBrainsMonoNL Nerd Font"
+                            font.pixelSize: 22
+                            color: musicModule._coverSecondary
+                            Behavior on color {
+                                ColorAnimation { duration: 500 }
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    if (musicModule.activePlayer && musicModule.activePlayer.canGoPrevious)
+                                        musicModule.activePlayer.previous()
+                                }
+                            }
+                        }
+
+                        Text {
+                            text: musicModule.isPlaying ? "\uF04D" : "\uF04B"
+                            font.family: "JetBrainsMonoNL Nerd Font"
+                            font.pixelSize: 28
+                            color: musicModule._coverPrimary
+                            Behavior on color {
+                                ColorAnimation { duration: 500 }
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    if (musicModule.activePlayer && musicModule.activePlayer.canTogglePlaying)
+                                        musicModule.activePlayer.togglePlaying()
+                                }
+                            }
+                        }
+
+                        Text {
+                            text: "\uF051"
+                            font.family: "JetBrainsMonoNL Nerd Font"
+                            font.pixelSize: 22
+                            color: musicModule._coverSecondary
+                            Behavior on color {
+                                ColorAnimation { duration: 500 }
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    if (musicModule.activePlayer && musicModule.activePlayer.canGoNext)
+                                        musicModule.activePlayer.next()
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
+            onClicked: musicModule.toggleLyricsExpanded()
         }
     }
 
@@ -1286,7 +1468,7 @@ Item {
         id: radiusRestoreTimer
         interval: 400
         onTriggered: {
-            if (!workspaceModule.notifCenterExpanded && !workspaceModule.overviewExpanded && !musicModule.lyricsMode && !networkModule.networkExpanded)
+            if (!workspaceModule.notifCenterExpanded && !workspaceModule.overviewExpanded && !musicModule.lyricsMode && !musicModule.lyricsExpanded && !networkModule.networkExpanded)
                 pillRadius = 0
         }
     }

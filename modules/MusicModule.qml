@@ -26,6 +26,7 @@ Item {
     property string _lastArtUrl: ""
 
     property bool lyricsMode: false
+    property bool lyricsExpanded: false
     property var _lrcLines: []
     property int _currentLyricIndex: -1
     property string _currentLyricText: ""
@@ -43,6 +44,13 @@ Item {
 
     function exitLyricsMode() {
         lyricsMode = false
+    }
+
+    function toggleLyricsExpanded() {
+        lyricsExpanded = !lyricsExpanded
+        if (lyricsExpanded && trackTitle && _lrcLines.length === 0) {
+            fetchLyrics(trackTitle, trackArtist)
+        }
     }
 
     function parseLrc(lrcText) {
