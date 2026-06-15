@@ -1020,36 +1020,44 @@ Item {
                 model: wifiModel
 
                 delegate: Rectangle {
+                    id: wifiDelegate
                     width: ListView.view.width
-                    height: 36
+                    height: 40
                     radius: 8
-                    color: model.inUse ? "#313244" : "transparent"
+                    color: "transparent"
+                    border.width: model.inUse || wifiDelegate._hovered ? 1 : 0
+                    border.color: model.inUse ? "#8bd5ca" : "#cba6f7"
+
+                    property bool _hovered: false
 
                     Row {
                         anchors.verticalCenter: parent.verticalCenter
                         anchors.left: parent.left
-                        anchors.leftMargin: 10
-                        spacing: 8
+                        anchors.leftMargin: 12
+                        spacing: 10
 
                         Text {
                             text: model.secured ? (model.signal <= 25 ? "󰤡" : model.signal <= 50 ? "󰤤" : model.signal <= 75 ? "󰤧" : "󰤪") : (model.signal <= 25 ? "󰤟" : model.signal <= 50 ? "󰤢" : model.signal <= 75 ? "󰤥" : "󰤨")
                             font.family: "JetBrainsMonoNL Nerd Font"
                             font.pixelSize: 20
-                            color: model.inUse ? "#89b4fa" : "#6c7086"
+                            color: "#cdd6f4"
                             anchors.verticalCenter: parent.verticalCenter
                         }
 
                         Text {
                             text: model.ssid
-                            color: model.inUse ? "#cdd6f4" : "#a6adc8"
-                            font.pixelSize: 13
+                            color: "#cdd6f4"
+                            font.pixelSize: 18
                             anchors.verticalCenter: parent.verticalCenter
                         }
                     }
 
                     MouseArea {
                         anchors.fill: parent
+                        hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
+                        onEntered: wifiDelegate._hovered = true
+                        onExited: wifiDelegate._hovered = false
                         onClicked: {
                             if (model.secured) {
                                 networkOverlay._selectedSsid = model.ssid
