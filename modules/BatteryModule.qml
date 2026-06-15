@@ -41,7 +41,7 @@ Item {
 
     function profileColor() {
         if (powerProfile === "performance") return "#f38ba8"
-        if (powerProfile === "balanced") return "#f9e2af"
+        if (powerProfile === "balanced") return "#8aadf4"
         return "#a6e3a1"
     }
 
