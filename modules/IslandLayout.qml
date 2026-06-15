@@ -14,6 +14,7 @@ Item {
     property int minWidth: 280
     property int minClockGap: 16
     property bool hovered: false
+    property int hoverBonusH: 6
     property alias workspaceModule: workspaceModule
     property alias trayModule: trayModule
     property alias musicModule: musicModule
@@ -152,7 +153,7 @@ Item {
         clockWidth = clockModule.implicitWidth
         targetWidth = Math.max(minWidth, halfWidth * 2 + clockWidth + effectiveHPadding * 2)
         _shrinking = targetWidth < layout.implicitWidth
-        targetHeight = clockModule.implicitHeight
+        targetHeight = clockModule.implicitHeight + (hovered ? hoverBonusH : 0)
     }
 
     onHoveredChanged: {
@@ -342,21 +343,25 @@ Item {
                         spacing: layout.spacing
                         WorkspaceModule {
                             id: workspaceModule
+                            Layout.alignment: Qt.AlignVCenter
                         }
                         BatteryModule {
                             id: batteryModule
                             pillHovered: layout.hovered
                             Layout.fillWidth: false
+                            Layout.alignment: Qt.AlignVCenter
                         }
                         VolumeModule {
                             id: volumeModule
                             pillHovered: layout.hovered
                             Layout.fillWidth: false
+                            Layout.alignment: Qt.AlignVCenter
                         }
                         BrightnessModule {
                             id: brightnessModule
                             pillHovered: layout.hovered
                             Layout.fillWidth: false
+                            Layout.alignment: Qt.AlignVCenter
                         }
                         MusicModule {
                             id: musicModule

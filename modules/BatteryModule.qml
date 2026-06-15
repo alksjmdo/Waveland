@@ -4,9 +4,9 @@ import Quickshell.Io
 
 Item {
     id: batteryModule
-    implicitWidth: row.implicitWidth
     implicitHeight: 42
-    width: row.implicitWidth
+    implicitWidth: active ? iconCell.width + row.spacing + battPct.implicitWidth : row.implicitWidth
+    width: implicitWidth
     height: 42
 
     Behavior on width {
@@ -14,6 +14,9 @@ Item {
     }
     property alias component: batteryModule
     property bool pillHovered: false
+    property bool active: false
+    property bool _contentVisible: false
+    property bool _pctVisible: false
 
     property double percentage: 100
     property string status: "Full"
@@ -24,6 +27,27 @@ Item {
     onPercentageChanged: ringCanvas.requestPaint()
     onProfileModeChanged: ringCanvas.requestPaint()
     onPowerProfileChanged: ringCanvas.requestPaint()
+
+    onPillHoveredChanged: {
+        if (pillHovered) {
+            batteryModule.show()
+        } else {
+            batteryModule.hide()
+        }
+    }
+
+    function show() {
+        if (!active) {
+            batteryModule.active = true
+            showContentTimer.restart()
+        }
+    }
+
+    function hide() {
+        _pctVisible = false
+        _contentVisible = false
+        hideActiveTimer.restart()
+    }
 
     function ringColor() {
         if (profileMode) return profileColor()
@@ -114,6 +138,21 @@ Item {
         id: profileExitTimer
         interval: 5000
         onTriggered: batteryModule.profileMode = false
+    }
+
+    Timer {
+        id: hideActiveTimer
+        interval: 250
+        onTriggered: batteryModule.active = false
+    }
+
+    Timer {
+        id: showContentTimer
+        interval: 600
+        onTriggered: {
+            batteryModule._contentVisible = true
+            batteryModule._pctVisible = true
+        }
     }
 
     function toggleProfile() {
@@ -214,7 +253,7 @@ Item {
             color: "#cdd6f4"
             anchors.verticalCenter: parent.verticalCenter
 
-            property real _opacity: batteryModule.pillHovered && !batteryModule.profileMode ? 1 : 0
+            property real _opacity: batteryModule._pctVisible && !batteryModule.profileMode ? 1 : 0
             Behavior on _opacity {
                 NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
             }
