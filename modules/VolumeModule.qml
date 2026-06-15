@@ -26,8 +26,19 @@ Item {
     onPillHoveredChanged: {
         if (pillHovered) {
             volumeModule.show()
-        } else {
+        } else if (volumeModule.active) {
             hideTimer.restart()
+        }
+    }
+
+    Timer {
+        id: hideTimer
+        interval: 3000
+        onTriggered: {
+            if (!volumeModule.pillHovered)
+                volumeModule.active = false
+            else
+                hideTimer.restart()
         }
     }
 
@@ -35,12 +46,6 @@ Item {
         target: Pipewire.defaultAudioSink.audio
         function onVolumeChanged() { volumeModule.show() }
         function onMutedChanged() { volumeModule.show() }
-    }
-
-    Timer {
-        id: hideTimer
-        interval: 3000
-        onTriggered: volumeModule.active = false
     }
 
     Timer {
