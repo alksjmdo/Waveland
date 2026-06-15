@@ -115,7 +115,7 @@ Item {
             return
         }
         if (musicModule.lyricsExpanded) {
-            targetWidth = 620
+            targetWidth = 720
             targetHeight = 340
             pillRadius = 20
             return
@@ -962,10 +962,11 @@ Item {
             spacing: 0
 
             Rectangle {
-                width: 240
-                height: parent.height
+                width: 340
+                height: 340
                 clip: true
                 color: "#313244"
+                anchors.verticalCenter: parent.verticalCenter
 
                 IconImage {
                     anchors.fill: parent
@@ -981,7 +982,7 @@ Item {
             }
 
             Item {
-                width: parent.width - 240
+                width: parent.width - 340
                 height: parent.height
 
                 Column {
@@ -1159,7 +1160,7 @@ Item {
 
         MouseArea {
             anchors.left: parent.left
-            anchors.leftMargin: 220
+            anchors.leftMargin: 340
             anchors.right: parent.right
             anchors.top: parent.top
             anchors.bottom: parent.bottom
