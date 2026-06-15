@@ -18,6 +18,8 @@ Item {
     property double percentage: 100
     property string status: "Full"
     property bool charging: status !== "Discharging"
+    property string powerProfile: "balanced"
+    property bool profileMode: false
 
     onPercentageChanged: ringCanvas.requestPaint()
 
@@ -26,6 +28,35 @@ Item {
         if (percentage > 60) return "#a6e3a1"
         if (percentage > 20) return "#f9e2af"
         return "#f38ba8"
+    }
+
+    function profileIcon() {
+        if (powerProfile === "performance") return ""
+        if (powerProfile === "balanced") return ""
+        return ""
+    }
+
+    function profileColor() {
+        if (powerProfile === "performance") return "#f38ba8"
+        if (powerProfile === "balanced") return "#f9e2af"
+        return "#a6e3a1"
+    }
+
+    function profileLabel() {
+        if (powerProfile === "performance") return "性能"
+        if (powerProfile === "balanced") return "均衡"
+        return "节能"
+    }
+
+    function profileNext() {
+        if (powerProfile === "performance") return "balanced"
+        if (powerProfile === "balanced") return "power-saver"
+        return "performance"
+    }
+
+    function cycleProfile() {
+        var next = profileNext()
+        profileProc.exec(["powerprofilesctl", "set", next])
     }
 
     Process {
@@ -46,13 +77,49 @@ Item {
         }
     }
 
+    Process {
+        id: profileProc
+        running: false
+    }
+
+    Process {
+        id: profileGetProc
+        running: false
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var p = text.trim()
+                if (p) batteryModule.powerProfile = p
+            }
+        }
+    }
+
     Timer {
         id: pollTimer
         interval: 5000
         running: true
         repeat: true
-        onTriggered: battProcess.exec(["sh", "-c",
-            "echo $(cat /sys/class/power_supply/BAT1/capacity) $(cat /sys/class/power_supply/BAT1/status)"])
+        onTriggered: {
+            battProcess.exec(["sh", "-c",
+                "echo $(cat /sys/class/power_supply/BAT1/capacity) $(cat /sys/class/power_supply/BAT1/status)"])
+            profileGetProc.exec(["powerprofilesctl", "get"])
+        }
+    }
+
+    Timer {
+        id: profileExitTimer
+        interval: 3000
+        onTriggered: batteryModule.profileMode = false
+    }
+
+    function toggleProfile() {
+        if (!profileMode) {
+            profileMode = true
+            profileExitTimer.restart()
+        } else {
+            cycleProfile()
+            profileExitTimer.restart()
+        }
     }
 
     function batteryIcon() {
@@ -112,6 +179,25 @@ Item {
                 font.pixelSize: 18
                 color: batteryModule.ringColor()
                 anchors.centerIn: parent
+                visible: !batteryModule.profileMode
+            }
+
+            Text {
+                text: batteryModule.profileIcon()
+                font.family: "JetBrainsMonoNL Nerd Font"
+                font.pixelSize: 18
+                color: batteryModule.profileColor()
+                anchors.centerIn: parent
+                visible: batteryModule.profileMode
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                    if (batteryModule.pillHovered)
+                        batteryModule.toggleProfile()
+                }
             }
         }
 
@@ -123,7 +209,7 @@ Item {
             color: "#cdd6f4"
             anchors.verticalCenter: parent.verticalCenter
 
-            property real _opacity: batteryModule.pillHovered ? 1 : 0
+            property real _opacity: batteryModule.pillHovered && !batteryModule.profileMode ? 1 : 0
             Behavior on _opacity {
                 NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
             }
@@ -134,5 +220,22 @@ Item {
             width: _opacity > 0.01 ? implicitWidth : 0
             clip: true
         }
+
+        Text {
+            id: profileLabelText
+            text: batteryModule.profileLabel()
+            font.family: "JetBrainsMonoNL Nerd Font"
+            font.pixelSize: 13
+            color: batteryModule.profileColor()
+            anchors.verticalCenter: parent.verticalCenter
+
+            property real _opacity: batteryModule.pillHovered && batteryModule.profileMode ? 1 : 0
+            Behavior on _opacity {
+                NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
+            }
+            opacity: _opacity
+        }
     }
+
+    Component.onCompleted: profileGetProc.exec(["powerprofilesctl", "get"])
 }
