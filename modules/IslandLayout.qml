@@ -1115,32 +1115,37 @@ Item {
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
 
-                Rectangle {
-                    width: parent.width
-                    height: 32
-                    radius: 8
-                    color: "#313244"
-                    anchors.horizontalCenter: parent.horizontalCenter
+                    Rectangle {
+                        width: parent.width
+                        height: 32
+                        radius: 8
+                        color: "#313244"
+                        anchors.horizontalCenter: parent.horizontalCenter
 
-                    TextInput {
-                        id: passwordInput
-                        anchors.fill: parent
-                        anchors.margins: 8
-                        color: "#cdd6f4"
-                        font.pixelSize: 13
-                        echoMode: TextInput.Password
-                        focus: networkOverlay._showPassword
+                        TextInput {
+                            id: passwordInput
+                            anchors.fill: parent
+                            anchors.leftMargin: 8
+                            anchors.rightMargin: 8
+                            color: "#cdd6f4"
+                            font.family: "JetBrainsMonoNL Nerd Font"
+                            font.pixelSize: 14
+                            verticalAlignment: TextInput.AlignVCenter
+                            echoMode: TextInput.Password
+                            passwordCharacter: "󰮙"
+                            clip: true
+                        }
 
                         Text {
                             text: "输入密码..."
                             color: "#585b70"
-                            font.pixelSize: 13
+                            font.pixelSize: 14
                             anchors.verticalCenter: parent.verticalCenter
                             anchors.left: parent.left
+                            anchors.leftMargin: 10
                             visible: !passwordInput.text && !passwordInput.activeFocus
                         }
                     }
-                }
 
                 Row {
                     anchors.horizontalCenter: parent.horizontalCenter
