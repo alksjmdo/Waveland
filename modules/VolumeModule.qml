@@ -7,6 +7,7 @@ Item {
     implicitWidth: active ? row.implicitWidth : 0
     implicitHeight: 42
     width: implicitWidth
+    clip: true
 
     Behavior on width {
         NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
