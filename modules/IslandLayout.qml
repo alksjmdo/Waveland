@@ -250,10 +250,14 @@ Item {
                     var sig = parseInt(parts[2]) || 0
                     var inUse = parts[0] === "*"
                     if (seen[ssid] === undefined) {
-                        seen[ssid] = { signal: sig, inUse: inUse }
+                        seen[ssid] = { signal: sig, inUse: inUse, security: parts[3] || "", secured: parts[3] !== "" && parts[3] !== "--" }
                     } else {
                         if (sig > seen[ssid].signal) seen[ssid].signal = sig
                         if (inUse) seen[ssid].inUse = true
+                        if (seen[ssid].security === "" && parts[3] !== "" && parts[3] !== "--") {
+                            seen[ssid].security = parts[3]
+                            seen[ssid].secured = true
+                        }
                     }
                 }
                 var items = []
@@ -262,8 +266,8 @@ Item {
                         inUse: seen[key].inUse,
                         ssid: key,
                         signal: seen[key].signal,
-                        security: "",
-                        secured: false
+                        security: seen[key].security,
+                        secured: seen[key].secured
                     })
                 }
                 items.sort(function(a, b) { return b.signal - a.signal })
