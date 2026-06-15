@@ -263,7 +263,7 @@ Item {
     Timer {
         id: lyricTimer
         interval: 200
-        running: musicModule.lyricsMode && musicModule.isPlaying && musicModule._lrcLines.length > 0 && musicModule._lrcLines[0].timeMs > 0
+        running: musicModule.lyricsMode && musicModule.isPlaying && musicModule._lrcLines.length > 0
         repeat: true
         onTriggered: {
             if (!musicModule.activePlayer) return
