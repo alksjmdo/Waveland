@@ -118,7 +118,7 @@ Item {
             pillRadius = 0
             var lyricsContentW = lyricsNoteIcon.implicitWidth + 8 + lyricDisplayText.implicitWidth + 8 + controlsContent.implicitWidth
             var totalW = leftWaves.implicitWidth + rightWaves.implicitWidth + lyricsContentW + 52
-            targetWidth = Math.max(300, Math.min(700, totalW))
+            targetWidth = Math.max(300, totalW)
             targetHeight = 42 + (hovered ? hoverBonusH : 0)
             return
         }
@@ -775,8 +775,6 @@ Item {
             color: "#cdd6f4"
             font.pixelSize: 14
             font.family: "JetBrainsMonoNL Nerd Font"
-            elide: Text.ElideRight
-            clip: true
 
             onImplicitWidthChanged: layout.recalc()
         }
