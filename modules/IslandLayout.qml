@@ -76,11 +76,11 @@ Item {
     property int targetWidth: minWidth
     property int targetHeight: 42
 
+    property bool _shrinking: false
     Behavior on targetWidth {
-        SpringAnimation {
-            spring: 3.0
-            damping: 0.7
-            mass: 3.6
+        NumberAnimation {
+            duration: layout._shrinking ? 200 : 400
+            easing.type: layout._shrinking ? Easing.InQuad : Easing.OutQuad
         }
     }
     Behavior on targetHeight {
@@ -159,6 +159,7 @@ Item {
         var bonusW = hovered ? hoverBonusW : 0
         var bonusH = hovered ? hoverBonusH : 0
         targetWidth = Math.max(minWidth, halfWidth * 2 + clockWidth + effectiveHPadding * 2) + bonusW
+        _shrinking = targetWidth < layout.implicitWidth
         targetHeight = clockModule.implicitHeight + bonusH
     }
 
