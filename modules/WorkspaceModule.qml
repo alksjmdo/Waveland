@@ -6,7 +6,7 @@ import Quickshell.Services.Notifications
 
 Item {
     id: workspaceModule
-    implicitWidth: Math.max(80, capsule.width)
+    implicitWidth: capsule.width
     implicitHeight: 42
     Layout.alignment: Qt.AlignVCenter
     property bool overviewExpanded: false
