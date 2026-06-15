@@ -1024,13 +1024,7 @@ Item {
                     width: ListView.view.width
                     height: 40
                     radius: 8
-                    color: model.inUse ? "#1e1e2e" : (hoverHandler.hovered ? "#313244" : "transparent")
-                    border.width: (model.inUse || hoverHandler.hovered) ? 1 : 0
-                    border.color: model.inUse ? "#8bd5ca" : "#cba6f7"
-
-                    HoverHandler {
-                        id: hoverHandler
-                    }
+                    color: "transparent"
 
                     Row {
                         anchors.verticalCenter: parent.verticalCenter
@@ -1042,13 +1036,13 @@ Item {
                             text: model.secured ? (model.signal <= 25 ? "󰤡" : model.signal <= 50 ? "󰤤" : model.signal <= 75 ? "󰤧" : "󰤪") : (model.signal <= 25 ? "󰤟" : model.signal <= 50 ? "󰤢" : model.signal <= 75 ? "󰤥" : "󰤨")
                             font.family: "JetBrainsMonoNL Nerd Font"
                             font.pixelSize: 20
-                            color: "#cdd6f4"
+                            color: model.inUse ? "#7dc4e4" : "#6c7086"
                             anchors.verticalCenter: parent.verticalCenter
                         }
 
                         Text {
                             text: model.ssid
-                            color: "#cdd6f4"
+                            color: model.inUse ? "#7dc4e4" : "#cdd6f4"
                             font.pixelSize: 18
                             anchors.verticalCenter: parent.verticalCenter
                         }
@@ -1057,6 +1051,7 @@ Item {
                     MouseArea {
                         id: wifiMouse
                         anchors.fill: parent
+                        hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
                             if (model.secured) {
