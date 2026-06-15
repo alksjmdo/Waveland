@@ -90,11 +90,14 @@ Item {
     }
 
     function show() {
-        _contentVisible = false
-        if (!active) volumeModule.active = true
-        showContentTimer.restart()
+        if (!active) {
+            _contentVisible = false
+            volumeModule.active = true
+            showContentTimer.restart()
+        } else {
+            repaintTimer.restart()
+        }
         hideTimer.restart()
-        repaintTimer.restart()
     }
 
     function showVolume() {
