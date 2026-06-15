@@ -61,13 +61,13 @@ Item {
     property int rightContentWidth: 0
     property int halfWidth: 0
     property int clockWidth: 64
-    property int effectiveHPadding: hPadding + (musicModule.isPlaying ? musicWaveWidth : 0)
+    property int effectiveHPadding: hPadding + (musicModule._showControls ? musicWaveWidth : 0)
 
     Behavior on effectiveHPadding {
         NumberAnimation { duration: 300; easing.type: Easing.InOutQuad }
     }
 
-    property real _musicOpacity: (musicModule.isPlaying || musicModule.lyricsMode) && !workspaceModule.notifCenterExpanded && !networkModule.networkExpanded ? 1 : 0
+    property real _musicOpacity: (musicModule._showControls || musicModule.lyricsMode) && !workspaceModule.notifCenterExpanded && !networkModule.networkExpanded ? 1 : 0
     Behavior on _musicOpacity {
         NumberAnimation { duration: 300; easing.type: Easing.InOutQuad }
     }
@@ -144,7 +144,7 @@ Item {
         rightContentWidth = rw
         lw += spacing + batteryModule.implicitWidth + spacing + volumeModule.implicitWidth + spacing + brightnessModule.implicitWidth
         rw += spacing + networkModule.implicitWidth + spacing + notifBell.implicitWidth
-        if (musicModule.isPlaying) {
+        if (musicModule._showControls) {
             lw += spacing + 20
             var artW = layout.hovered ? 100 : 28
             rw += spacing + artW

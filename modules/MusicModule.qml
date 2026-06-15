@@ -10,6 +10,9 @@ Item {
     Layout.alignment: Qt.AlignVCenter
 
     property bool isPlaying: false
+    property bool _hasPlayer: false
+    property bool _pauseExpired: false
+    property bool _showControls: musicModule._hasPlayer && (musicModule.isPlaying || !musicModule._pauseExpired)
     property string trackTitle: ""
     property string trackArtist: ""
     property string trackArtUrl: ""
@@ -92,14 +95,15 @@ Item {
 
     function refreshState() {
         var players = Mpris.players.values
-        var found = false
+        var playingFound = false
+        var anyPlayerFound = players.length > 0
         var newTitle = ""
         var newArtist = ""
         for (var i = 0; i < players.length; i++) {
             var p = players[i]
             if (p && p.isPlaying) {
-                if (!found) {
-                    found = true
+                if (!playingFound) {
+                    playingFound = true
                     newTitle = p.trackTitle || ""
                     newArtist = p.trackArtist || ""
                     isPlaying = true
@@ -110,22 +114,39 @@ Item {
                 }
             }
         }
-        if (!found) {
+        if (playingFound) {
+            _hasPlayer = true
+            _pauseExpired = false
+            _pauseTimer.stop()
+            if (newTitle) {
+                var key = newTitle + "||" + newArtist
+                if (_lastFetchedKey !== key) {
+                    _lastFetchedKey = key
+                    _lrcLines = []
+                    _currentLyricIndex = -1
+                    updateDisplayText()
+                    fetchLyrics(newTitle, newArtist)
+                }
+            }
+        } else if (anyPlayerFound) {
+            isPlaying = false
+            if (!_hasPlayer) {
+                var pp = players[0]
+                activePlayer = pp
+                trackTitle = pp.trackTitle || ""
+                trackArtist = pp.trackArtist || ""
+                trackArtUrl = pp.trackArtUrl || ""
+            }
+            _hasPlayer = true
+            if (!_pauseExpired && !_pauseTimer.running) _pauseTimer.restart()
+        } else {
             isPlaying = false
             activePlayer = null
             trackTitle = ""
             trackArtist = ""
             trackArtUrl = ""
-        }
-        if (found && newTitle) {
-            var key = newTitle + "||" + newArtist
-            if (_lastFetchedKey !== key) {
-                _lastFetchedKey = key
-                _lrcLines = []
-                _currentLyricIndex = -1
-                updateDisplayText()
-                fetchLyrics(newTitle, newArtist)
-            }
+            _pauseExpired = false
+            _pauseTimer.stop()
         }
     }
 
@@ -136,6 +157,12 @@ Item {
         running: true
         repeat: true
         onTriggered: musicModule.refreshState()
+    }
+
+    Timer {
+        id: _pauseTimer
+        interval: 300000
+        onTriggered: musicModule._pauseExpired = true
     }
 
     Process {

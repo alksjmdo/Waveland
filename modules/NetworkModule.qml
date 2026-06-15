@@ -110,7 +110,7 @@ Item {
 
     Timer {
         id: showContentTimer
-        interval: 600
+        interval: 500
         onTriggered: {
             networkModule._contentVisible = true
             if (networkModule.pillHovered) networkModule._pctVisible = true
