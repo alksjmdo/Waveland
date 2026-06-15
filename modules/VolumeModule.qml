@@ -101,6 +101,8 @@ Item {
             Canvas {
                 id: ringCanvas
                 anchors.fill: parent
+                opacity: volumeModule._opacity
+                visible: volumeModule._opacity > 0.01
 
                 onPaint: {
                     if (width < 4 || height < 4) return
@@ -129,6 +131,8 @@ Item {
                 font.pixelSize: 18
                 color: "#89b4fa"
                 anchors.centerIn: parent
+                opacity: volumeModule._opacity
+                visible: volumeModule._opacity > 0.01
             }
         }
 
