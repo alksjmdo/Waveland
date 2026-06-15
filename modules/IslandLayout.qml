@@ -790,7 +790,7 @@ Item {
             anchors.rightMargin: 8
             anchors.verticalCenter: parent.verticalCenter
             text: musicModule._displayText
-            color: musicModule._coverPrimary
+            color: musicModule._coverText
             Behavior on color {
                 ColorAnimation { duration: 500 }
             }

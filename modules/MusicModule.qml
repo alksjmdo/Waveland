@@ -21,6 +21,7 @@ Item {
     property string _coverPrimary: "#cba6f7"
     property string _coverSecondary: "#b4befe"
     property string _coverTertiary: "#f5c2e7"
+    property string _coverText: "#cdd6f4"
 
     property string _lastArtUrl: ""
 
@@ -196,9 +197,11 @@ Item {
                         var pal = data.palettes.primary
                         var p80 = pal && pal["80"] ? pal["80"].color : ""
                         var p60 = pal && pal["60"] ? pal["60"].color : ""
+                        var p95 = pal && pal["95"] ? pal["95"].color : ""
                         if (sc) musicModule._coverPrimary = sc
                         if (p80) musicModule._coverSecondary = p80
                         if (p60) musicModule._coverTertiary = p60
+                        if (p95) musicModule._coverText = p95
                     }
                 } catch(e) {}
             }
