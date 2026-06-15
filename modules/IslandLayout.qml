@@ -644,18 +644,12 @@ Item {
             id: lyricsControlsWrapper
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
-            width: lyricsControlsWrapper._expanded ? controlsContent.implicitWidth : 24
+            width: controlsContent.implicitWidth
             height: 24
-            clip: true
-
-            property bool _expanded: layout.hovered
-            Behavior on width {
-                NumberAnimation { duration: 250; easing.type: Easing.InOutQuad }
-            }
 
             Row {
                 id: controlsContent
-                anchors.right: parent.right
+                anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: 4
 
@@ -681,7 +675,7 @@ Item {
                     font.pixelSize: 16
                     color: "#cdd6f4"
                     anchors.verticalCenter: parent.verticalCenter
-                    opacity: lyricsControlsWrapper._expanded ? 1 : 0
+                    opacity: layout.hovered ? 1 : 0
                     Behavior on opacity {
                         NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
                     }
@@ -702,7 +696,7 @@ Item {
                     font.pixelSize: 16
                     color: "#cba6f7"
                     anchors.verticalCenter: parent.verticalCenter
-                    opacity: lyricsControlsWrapper._expanded ? 1 : 0
+                    opacity: layout.hovered ? 1 : 0
                     Behavior on opacity {
                         NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
                     }
@@ -723,7 +717,7 @@ Item {
                     font.pixelSize: 16
                     color: "#cdd6f4"
                     anchors.verticalCenter: parent.verticalCenter
-                    opacity: lyricsControlsWrapper._expanded ? 1 : 0
+                    opacity: layout.hovered ? 1 : 0
                     Behavior on opacity {
                         NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
                     }
