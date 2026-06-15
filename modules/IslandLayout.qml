@@ -135,10 +135,10 @@ Item {
                 if (j < rlist.length - 1) rw += spacing
             }
         }
-        lw += spacing + batteryModule.width
-        rw += spacing + spacing + notifBell.implicitWidth
         leftContentWidth = lw
         rightContentWidth = rw
+        lw += spacing + batteryModule.width
+        rw += spacing + notifBell.implicitWidth
         if (musicModule.isPlaying) {
             lw += spacing + 20
             var artW = layout.hovered ? 100 : 28
@@ -237,7 +237,8 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     width: layout.leftContentWidth
                     height: parent.height
-                    Row {
+                    RowLayout {
+                        anchors.fill: parent
                         spacing: layout.spacing
                         WorkspaceModule {
                             id: workspaceModule
@@ -245,6 +246,7 @@ Item {
                         BatteryModule {
                             id: batteryModule
                             pillHovered: layout.hovered
+                            Layout.fillWidth: false
                         }
                         MusicModule {
                             id: musicModule
