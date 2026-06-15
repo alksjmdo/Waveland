@@ -96,8 +96,8 @@ Item {
 
     function recalc() {
         if (workspaceModule.notifCenterExpanded) {
-            targetWidth = 420
-            targetHeight = 240
+            targetWidth = 840
+            targetHeight = 480
             pillRadius = 16
             return
         }
