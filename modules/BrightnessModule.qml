@@ -170,7 +170,7 @@ Item {
 
                     ctx.beginPath()
                     ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + b * 2 * Math.PI, false)
-                    ctx.strokeStyle = "#f9e2af"
+                    ctx.strokeStyle = "#df8e1d"
                     ctx.lineWidth = 2
                     ctx.lineCap = "round"
                     ctx.stroke()
@@ -181,7 +181,7 @@ Item {
                 text: brightnessModule.brightnessIcon()
                 font.family: "JetBrainsMonoNL Nerd Font"
                 font.pixelSize: 18
-                color: "#f9e2af"
+                color: "#df8e1d"
                 anchors.centerIn: parent
                 opacity: brightnessModule._opacity
                 visible: brightnessModule._opacity > 0.01
