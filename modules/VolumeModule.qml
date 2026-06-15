@@ -20,6 +20,10 @@ Item {
     property bool _shownByHover: false
     property bool _contentVisible: false
 
+    on_ContentVisibleChanged: {
+        if (_contentVisible) repaintTimer.restart()
+    }
+
     property real _opacity: _contentVisible ? 1 : 0
     Behavior on _opacity {
         NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
