@@ -956,6 +956,25 @@ Item {
         opacity: _opacity
         visible: _opacity > 0.01
 
+        property real _lyricOpacity: 1
+        Behavior on _lyricOpacity {
+            NumberAnimation { duration: 150; easing.type: Easing.InOutQuad }
+        }
+
+        Connections {
+            target: musicModule
+            function on_CurrentLyricIndexChanged() {
+                _lyricOpacity = 0.2
+                lyricFadeTimer.restart()
+            }
+        }
+
+        Timer {
+            id: lyricFadeTimer
+            interval: 80
+            onTriggered: _lyricOpacity = 1
+        }
+
         Row {
             anchors.fill: parent
             spacing: 0
@@ -1043,6 +1062,7 @@ Item {
 
                         Text {
                             id: prevLine
+                            opacity: lyricsExpandedOverlay._lyricOpacity
                             text: musicModule._currentLyricIndex > 0 && musicModule._currentLyricIndex <= musicModule._lrcLines.length
                                 ? musicModule._lrcLines[musicModule._currentLyricIndex - 1].text : ""
                             font.family: "JetBrainsMonoNL Nerd Font"
@@ -1056,6 +1076,7 @@ Item {
                         }
 
                         Text {
+                            opacity: lyricsExpandedOverlay._lyricOpacity
                             text: musicModule._currentLyricIndex >= 0 && musicModule._currentLyricIndex < musicModule._lrcLines.length
                                 ? musicModule._lrcLines[musicModule._currentLyricIndex].text : musicModule.trackTitle || ""
                             font.family: "JetBrainsMonoNL Nerd Font"
@@ -1070,6 +1091,7 @@ Item {
 
                         Text {
                             id: nextLine
+                            opacity: lyricsExpandedOverlay._lyricOpacity
                             text: musicModule._currentLyricIndex >= 0 && musicModule._currentLyricIndex + 1 < musicModule._lrcLines.length
                                 ? musicModule._lrcLines[musicModule._currentLyricIndex + 1].text : ""
                             font.family: "JetBrainsMonoNL Nerd Font"
