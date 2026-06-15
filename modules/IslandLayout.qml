@@ -232,7 +232,7 @@ Item {
         id: networkRefresh
         interval: 100
         onTriggered: wifiScan.exec(["sh", "-c",
-            "nmcli -t -f IN-USE,SSID,SIGNAL,SECURITY dev wifi list 2>/dev/null | grep -v '^$'"])
+            "nmcli -t -f IN-USE,SSID,SIGNAL,SECURITY dev wifi list --rescan no 2>/dev/null | grep -v '^$'"])
     }
 
     Process {
@@ -241,25 +241,43 @@ Item {
 
         stdout: StdioCollector {
             onStreamFinished: {
-                wifiModel.clear()
+                var seen = {}
+                var items = []
                 var lines = text.trim().split("\n")
                 for (var i = 0; i < lines.length; i++) {
                     var parts = lines[i].split(":")
-                    if (parts.length >= 4 && parts[1]) {
-                        wifiModel.append({
-                            inUse: parts[0] === "*",
-                            ssid: parts[1],
-                            signal: parseInt(parts[2]) || 0,
-                            security: parts[3] || "",
-                            secured: parts[3] !== "" && parts[3] !== "--"
-                        })
+                    if (parts.length < 4 || !parts[1]) continue
+                    var ssid = parts[1]
+                    var sig = parseInt(parts[2]) || 0
+                    if (seen[ssid] !== undefined) {
+                        if (sig > seen[ssid]) seen[ssid] = sig
+                        continue
                     }
+                    seen[ssid] = sig
+                    items.push({
+                        inUse: parts[0] === "*",
+                        ssid: ssid,
+                        signal: sig,
+                        security: parts[3] || "",
+                        secured: parts[3] !== "" && parts[3] !== "--"
+                    })
                 }
+                items.sort(function(a, b) { return b.signal - a.signal })
+                wifiModel.clear()
+                for (var j = 0; j < items.length; j++)
+                    wifiModel.append(items[j])
             }
         }
     }
 
     ListModel { id: wifiModel }
+
+    Timer {
+        id: wifiRescan
+        interval: 100
+        onTriggered: wifiScan.exec(["sh", "-c",
+            "nmcli dev wifi rescan 2>/dev/null; sleep 2; nmcli -t -f IN-USE,SSID,SIGNAL,SECURITY dev wifi list --rescan no 2>/dev/null | grep -v '^$'"])
+    }
 
     Process {
         id: wifiConnect
@@ -977,7 +995,7 @@ Item {
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: networkRefresh.restart()
+                    onClicked: wifiRescan.restart()
                 }
             }
         }
