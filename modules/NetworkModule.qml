@@ -113,7 +113,7 @@ Item {
         interval: 500
         onTriggered: {
             networkModule._contentVisible = true
-            if (networkModule.pillHovered) networkModule._pctVisible = true
+            if (networkModule._shownByHover) networkModule._pctVisible = true
         }
     }
 

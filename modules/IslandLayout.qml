@@ -168,12 +168,14 @@ Item {
         target: workspaceModule
         function onNotifCenterExpandedChanged() {
             layout.recalc()
-            if (!workspaceModule.notifCenterExpanded)
+            if (!workspaceModule.notifCenterExpanded) {
                 notifCenter.expandedIndex = -1
-            if (workspaceModule.notifCenterExpanded && musicModule.lyricsMode)
-                musicModule.exitLyricsMode()
-            if (!workspaceModule.notifCenterExpanded)
                 radiusRestoreTimer.restart()
+                if (layout.hovered) {
+                    volumeModule.show()
+                    brightnessModule.show()
+                }
+            }
         }
         function onNotifActiveChanged() {
             layout.recalc()
@@ -193,6 +195,9 @@ Item {
                 if (musicModule.lyricsMode)
                     musicModule.exitLyricsMode()
                 workspaceModule.resolveAllIcons()
+            } else if (layout.hovered) {
+                volumeModule.show()
+                brightnessModule.show()
             }
         }
     }
@@ -290,8 +295,13 @@ Item {
         target: networkModule
         function onNetworkExpandedChanged() {
             layout.recalc()
-            if (!networkModule.networkExpanded)
+            if (!networkModule.networkExpanded) {
                 radiusRestoreTimer.restart()
+                if (layout.hovered) {
+                    volumeModule.show()
+                    brightnessModule.show()
+                }
+            }
             if (networkModule.networkExpanded) {
                 if (workspaceModule.notifCenterExpanded)
                     workspaceModule.notifCenterExpanded = false
