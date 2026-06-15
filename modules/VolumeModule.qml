@@ -118,10 +118,13 @@ Item {
     function volumeIcon() {
         var a = sinkAudio()
         if (!a) return "󰕾"
-        if (a.muted || a.volume === 0) return "󰝟"
-        if (a.volume <= 0.33) return "󰕿"
-        if (a.volume <= 0.66) return "󰖀"
-        return "󰕾"
+        if (a.muted) return ""
+        if (a.volume <= 0.01) return ""
+        if (a.volume <= 0.20) return ""
+        if (a.volume <= 0.40) return ""
+        if (a.volume <= 0.60) return "󰕾"
+        if (a.volume <= 0.80) return ""
+        return ""
     }
 
     Row {
