@@ -805,6 +805,12 @@ Item {
                         source: musicModule.trackArtUrl !== "" ? musicModule.trackArtUrl : ""
                         asynchronous: true
                     }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: musicModule.toggleLyricsExpanded()
+                    }
                 }
             }
         }
@@ -825,12 +831,6 @@ Item {
             font.family: "JetBrainsMonoNL Nerd Font"
 
             onImplicitWidthChanged: layout.recalc()
-
-            MouseArea {
-                anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-                onClicked: musicModule.toggleLyricsExpanded()
-            }
         }
     }
 
@@ -955,6 +955,12 @@ Item {
         opacity: _opacity
         visible: _opacity > 0.01
 
+        Rectangle {
+            anchors.fill: parent
+            radius: 16
+            color: "#1e1e2e"
+        }
+
         Item {
             anchors.fill: parent
             anchors.margins: 24
@@ -977,6 +983,12 @@ Item {
                         source: musicModule.trackArtUrl !== "" ? musicModule.trackArtUrl : ""
                         asynchronous: true
                     }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: musicModule.toggleLyricsExpanded()
+                    }
                 }
 
                 Column {
@@ -997,7 +1009,7 @@ Item {
 
                     Item {
                         width: 440
-                        height: 100
+                        height: 160
                         clip: true
 
                         ListView {
