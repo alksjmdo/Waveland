@@ -84,7 +84,7 @@ Item {
 
     Timer {
         id: showContentTimer
-        interval: 220
+        interval: 250
         onTriggered: brightnessModule._contentVisible = true
     }
 

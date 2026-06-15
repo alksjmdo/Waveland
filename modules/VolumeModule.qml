@@ -54,7 +54,7 @@ Item {
 
     Timer {
         id: showContentTimer
-        interval: 220
+        interval: 250
         onTriggered: volumeModule._contentVisible = true
     }
 
