@@ -256,6 +256,7 @@ Item {
                         }
                         VolumeModule {
                             id: volumeModule
+                            pillHovered: layout.hovered
                             Layout.fillWidth: false
                         }
                         MusicModule {
