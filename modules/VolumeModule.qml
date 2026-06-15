@@ -40,10 +40,10 @@ Item {
     }
 
     function volumeIcon() {
-        if (audio.muted || audio.volume === 0) return "\uF5FF"
-        if (audio.volume <= 0.33) return "\uF57F"
-        if (audio.volume <= 0.66) return "\uF580"
-        return "\uF57E"
+        if (audio.muted || audio.volume === 0) return "󰝟"
+        if (audio.volume <= 0.33) return "󰕿"
+        if (audio.volume <= 0.66) return "󰖀"
+        return "󰕾"
     }
 
     Row {
