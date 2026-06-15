@@ -4,7 +4,8 @@ import Quickshell.Io
 
 Item {
     id: batteryModule
-    implicitWidth: row.implicitWidth
+    property int maxWidth: battIcon.implicitWidth + 2 + battPct.implicitWidth
+    implicitWidth: maxWidth
     implicitHeight: 42
     width: row.implicitWidth
     height: 42
@@ -67,6 +68,7 @@ Item {
         spacing: 2
 
         Text {
+            id: battIcon
             text: batteryModule.charging ? "󰚥" : batteryModule.batteryIcon()
             font.family: "JetBrainsMonoNL Nerd Font"
             font.pixelSize: 18
@@ -75,6 +77,7 @@ Item {
         }
 
         Text {
+            id: battPct
             text: Math.round(batteryModule.percentage) + "%"
             font.family: "JetBrainsMonoNL Nerd Font"
             font.pixelSize: 13
