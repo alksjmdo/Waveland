@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 import Quickshell.Services.Pipewire
 import Quickshell.Widgets
 Item {
@@ -67,7 +68,7 @@ Item {
         NumberAnimation { duration: 300; easing.type: Easing.InOutQuad }
     }
 
-    property real _musicOpacity: (musicModule.isPlaying || musicModule.lyricsMode) && !workspaceModule.notifCenterExpanded ? 1 : 0
+    property real _musicOpacity: (musicModule.isPlaying || musicModule.lyricsMode) && !workspaceModule.notifCenterExpanded && !networkModule.networkExpanded ? 1 : 0
     Behavior on _musicOpacity {
         NumberAnimation { duration: 300; easing.type: Easing.InOutQuad }
     }
@@ -97,6 +98,12 @@ Item {
         if (workspaceModule.notifCenterExpanded) {
             targetWidth = 420
             targetHeight = 240
+            pillRadius = 16
+            return
+        }
+        if (networkModule.networkExpanded) {
+            targetWidth = 420
+            targetHeight = 280
             pillRadius = 16
             return
         }
@@ -223,6 +230,24 @@ Item {
 
     Connections {
         target: networkModule
+        function onNetworkExpandedChanged() {
+            layout.recalc()
+            if (!networkModule.networkExpanded)
+                radiusRestoreTimer.restart()
+            if (networkModule.networkExpanded) {
+                if (workspaceModule.notifCenterExpanded)
+                    workspaceModule.notifCenterExpanded = false
+                if (workspaceModule.overviewExpanded)
+                    workspaceModule.overviewExpanded = false
+                if (musicModule.lyricsMode)
+                    musicModule.exitLyricsMode()
+                networkRefresh.restart()
+            }
+        }
+    }
+
+    Connections {
+        target: networkModule
         function onWidthChanged() { layout.recalc() }
     }
 
@@ -235,7 +260,7 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         height: parent.height
 
-        property real _opacity: (workspaceModule.notifCenterExpanded || musicModule.lyricsMode || workspaceModule.overviewExpanded) ? 0 : 1
+        property real _opacity: (workspaceModule.notifCenterExpanded || musicModule.lyricsMode || workspaceModule.overviewExpanded || networkModule.networkExpanded) ? 0 : 1
         Behavior on _opacity {
             NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
         }
@@ -658,8 +683,289 @@ Item {
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: {
                                         workspaceModule.niriAction("focus-window --id " + modelData.id)
-                                    }
+        }
+    }
+
+    Timer {
+        id: networkRefresh
+        interval: 100
+        onTriggered: wifiScan.exec(["sh", "-c",
+            "nmcli -t -f IN-USE,SSID,SIGNAL,SECURITY dev wifi list 2>/dev/null | grep -v '^$'"])
+    }
+
+    Process {
+        id: wifiScan
+        running: false
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                wifiModel.clear()
+                var lines = text.trim().split("\n")
+                for (var i = 0; i < lines.length; i++) {
+                    var parts = lines[i].split(":")
+                    if (parts.length >= 4 && parts[1]) {
+                        wifiModel.append({
+                            inUse: parts[0] === "*",
+                            ssid: parts[1],
+                            signal: parseInt(parts[2]) || 0,
+                            security: parts[3] || "",
+                            secured: parts[3] !== "" && parts[3] !== "--"
+                        })
+                    }
+                }
+            }
+        }
+    }
+
+    ListModel { id: wifiModel }
+
+    Item {
+        id: networkOverlay
+        anchors.fill: parent
+
+        property real _opacity: networkModule.networkExpanded ? 1 : 0
+        Behavior on _opacity {
+            NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
+        }
+        opacity: _opacity
+        visible: _opacity > 0.01
+
+        property string _selectedSsid: ""
+        property bool _needPassword: false
+        property bool _showPassword: false
+
+        Row {
+            id: networkTopRow
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: parent.top
+            anchors.topMargin: 16
+            spacing: 8
+
+            Text {
+                text: "󰛍"
+                font.family: "JetBrainsMonoNL Nerd Font"
+                font.pixelSize: 22
+                color: "#89b4fa"
+                anchors.verticalCenter: parent.verticalCenter
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: networkModule.networkExpanded = false
+                }
+            }
+
+            ClockModule {
+                id: networkClock
+                scale: networkModule.networkExpanded ? 0.7 : 1
+                Behavior on scale {
+                    SpringAnimation { spring: 2.0; damping: 0.5; mass: 1.0 }
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: networkModule.networkExpanded = false
+                }
+            }
+
+            Text {
+                text: "󰑐"
+                font.family: "JetBrainsMonoNL Nerd Font"
+                font.pixelSize: 20
+                color: "#6c7086"
+                anchors.verticalCenter: parent.verticalCenter
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: networkRefresh.restart()
+                }
+            }
+        }
+
+        Item {
+            id: wifiListView
+            anchors.top: networkTopRow.bottom
+            anchors.topMargin: 12
+            anchors.left: parent.left
+            anchors.leftMargin: 16
+            anchors.right: parent.right
+            anchors.rightMargin: 16
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 12
+            clip: true
+            opacity: networkOverlay._showPassword ? 0 : 1
+            visible: opacity > 0.01
+
+            ListView {
+                anchors.fill: parent
+                spacing: 4
+                model: wifiModel
+
+                delegate: Rectangle {
+                    width: ListView.view.width
+                    height: 36
+                    radius: 8
+                    color: model.inUse ? "#313244" : "transparent"
+
+                    Row {
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.left: parent.left
+                        anchors.leftMargin: 10
+                        spacing: 8
+
+                        Text {
+                            text: model.secured ? (model.signal <= 25 ? "󰤡" : model.signal <= 50 ? "󰤤" : model.signal <= 75 ? "󰤧" : "󰤪") : (model.signal <= 25 ? "󰤟" : model.signal <= 50 ? "󰤢" : model.signal <= 75 ? "󰤥" : "󰤨")
+                            font.family: "JetBrainsMonoNL Nerd Font"
+                            font.pixelSize: 20
+                            color: model.inUse ? "#89b4fa" : "#6c7086"
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+
+                        Text {
+                            text: model.ssid
+                            color: model.inUse ? "#cdd6f4" : "#a6adc8"
+                            font.pixelSize: 13
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            if (model.secured) {
+                                networkOverlay._selectedSsid = model.ssid
+                                networkOverlay._needPassword = true
+                                networkOverlay._showPassword = true
+                            } else {
+                                wifiConnect.exec(["nmcli", "dev", "wifi", "connect", model.ssid])
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Item {
+            id: passwordPanel
+            anchors.top: networkTopRow.bottom
+            anchors.topMargin: 20
+            anchors.left: parent.left
+            anchors.leftMargin: 16
+            anchors.right: parent.right
+            anchors.rightMargin: 16
+            height: 120
+            opacity: networkOverlay._showPassword ? 1 : 0
+            visible: opacity > 0.01
+
+            Column {
+                anchors.centerIn: parent
+                spacing: 12
+                width: parent.width - 48
+
+                Text {
+                    text: networkOverlay._selectedSsid
+                    color: "#cdd6f4"
+                    font.pixelSize: 14
+                    anchors.horizontalCenter: parent.horizontalCenter
+                }
+
+                Rectangle {
+                    width: parent.width
+                    height: 32
+                    radius: 8
+                    color: "#313244"
+                    anchors.horizontalCenter: parent.horizontalCenter
+
+                    TextInput {
+                        id: passwordInput
+                        anchors.fill: parent
+                        anchors.margins: 8
+                        color: "#cdd6f4"
+                        font.pixelSize: 13
+                        echoMode: TextInput.Password
+                        focus: networkOverlay._showPassword
+
+                        Text {
+                            text: "输入密码..."
+                            color: "#585b70"
+                            font.pixelSize: 13
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.left: parent.left
+                            visible: !passwordInput.text && !passwordInput.activeFocus
+                        }
+                    }
+                }
+
+                Row {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: 20
+
+                    Rectangle {
+                        width: 80
+                        height: 28
+                        radius: 14
+                        color: "#313244"
+
+                        Text {
+                            text: "取消"
+                            color: "#6c7086"
+                            font.pixelSize: 12
+                            anchors.centerIn: parent
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                networkOverlay._showPassword = false
+                                networkOverlay._selectedSsid = ""
+                                networkOverlay._needPassword = false
+                                passwordInput.text = ""
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        width: 80
+                        height: 28
+                        radius: 14
+                        color: "#89b4fa"
+
+                        Text {
+                            text: "连接"
+                            color: "#1e1e2e"
+                            font.pixelSize: 12
+                            anchors.centerIn: parent
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                if (passwordInput.text) {
+                                    wifiConnect.exec(["nmcli", "dev", "wifi", "connect",
+                                        networkOverlay._selectedSsid,
+                                        "password", passwordInput.text])
                                 }
+                                networkOverlay._showPassword = false
+                                networkOverlay._selectedSsid = ""
+                                networkOverlay._needPassword = false
+                                passwordInput.text = ""
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    Process {
+        id: wifiConnect
+        running: false
+    }
                             }
                         }
                     }
@@ -873,7 +1179,7 @@ Item {
         id: radiusRestoreTimer
         interval: 400
         onTriggered: {
-            if (!workspaceModule.notifCenterExpanded && !workspaceModule.overviewExpanded && !musicModule.lyricsMode)
+            if (!workspaceModule.notifCenterExpanded && !workspaceModule.overviewExpanded && !musicModule.lyricsMode && !networkModule.networkExpanded)
                 pillRadius = 0
         }
     }

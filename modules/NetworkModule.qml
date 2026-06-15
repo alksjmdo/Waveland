@@ -18,6 +18,7 @@ Item {
     property bool pillHovered: false
     property bool _shownByHover: false
     property bool _contentVisible: false
+    property bool networkExpanded: false
 
     on_ContentVisibleChanged: {
         if (!_contentVisible) networkModule.active = false
@@ -142,6 +143,15 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             opacity: networkModule._opacity
             visible: networkModule._opacity > 0.01
+
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                    if (networkModule.pillHovered)
+                        networkModule.networkExpanded = !networkModule.networkExpanded
+                }
+            }
         }
 
         Text {
