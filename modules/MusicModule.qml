@@ -191,16 +191,14 @@ Item {
                 if (!raw) return
                 try {
                     var data = JSON.parse(raw)
-                    if (data && data.colors) {
-                        var dark = function(k) {
-                            return data.colors[k] && data.colors[k].dark ? data.colors[k].dark.color : ""
-                        }
-                        var p = dark("primary")
-                        var s = dark("secondary")
-                        var t = dark("tertiary")
-                        if (p) musicModule._coverPrimary = p
-                        if (s) musicModule._coverSecondary = s
-                        if (t) musicModule._coverTertiary = t
+                    if (data && data.colors && data.palettes) {
+                        var sc = data.colors.source_color && data.colors.source_color.dark ? data.colors.source_color.dark.color : ""
+                        var pal = data.palettes.primary
+                        var p80 = pal && pal["80"] ? pal["80"].color : ""
+                        var p60 = pal && pal["60"] ? pal["60"].color : ""
+                        if (sc) musicModule._coverPrimary = sc
+                        if (p80) musicModule._coverSecondary = p80
+                        if (p60) musicModule._coverTertiary = p60
                     }
                 } catch(e) {}
             }
