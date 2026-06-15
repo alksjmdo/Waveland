@@ -964,6 +964,7 @@ Item {
                 width: 340
                 height: 340
                 clip: true
+                radius: 20
                 color: musicModule._coverTertiary
                 anchors.verticalCenter: parent.verticalCenter
                 Behavior on color {
