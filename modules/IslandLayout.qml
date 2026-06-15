@@ -865,7 +865,7 @@ Item {
                 property int myIndex: index
                 property bool expanded: notifCenter.expandedIndex === myIndex
                 width: ListView.view.width
-                height: expanded ? bodyText.implicitHeight + 54 : (modelData.body && modelData.body !== "" ? 78 : 54)
+                height: expanded ? notifSummary.implicitHeight + 6 + bodyText.implicitHeight + 24 : (modelData.body && modelData.body !== "" ? 78 : 54)
                 radius: 8
                 color: "#313244"
 
@@ -906,7 +906,8 @@ Item {
                     text: modelData.summary
                     color: "#a6adc8"
                     font.pixelSize: 18
-                    elide: Text.ElideRight
+                    elide: notifDelegate.expanded ? Text.ElideNone : Text.ElideRight
+                    wrapMode: notifDelegate.expanded ? Text.WordWrap : Text.NoWrap
                 }
                 Text {
                     id: bodyText
