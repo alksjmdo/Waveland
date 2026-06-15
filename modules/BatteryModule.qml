@@ -4,8 +4,7 @@ import Quickshell.Io
 
 Item {
     id: batteryModule
-    property int maxWidth: battIcon.implicitWidth + 2 + battPct.implicitWidth
-    implicitWidth: maxWidth
+    implicitWidth: row.implicitWidth
     implicitHeight: 42
     width: row.implicitWidth
     height: 42
