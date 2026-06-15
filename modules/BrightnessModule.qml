@@ -81,7 +81,13 @@ Item {
     Timer {
         id: hideTimer
         interval: 3000
-        onTriggered: brightnessModule.active = false
+        onTriggered: {
+            if (brightnessModule.pillHovered) {
+                hideTimer.restart()
+            } else {
+                brightnessModule.active = false
+            }
+        }
     }
 
     Timer {
@@ -106,7 +112,15 @@ Item {
         show()
     }
 
-    function brightnessIcon() { return "󰃟" }
+    function brightnessIcon() {
+        if (brightness <= 0.01) return "󰃚"
+        if (brightness <= 0.15) return "󰃛"
+        if (brightness <= 0.30) return "󰃜"
+        if (brightness <= 0.50) return "󰃝"
+        if (brightness <= 0.70) return "󰃞"
+        if (brightness <= 0.90) return "󰃟"
+        return "󰃠"
+    }
 
     Row {
         id: row

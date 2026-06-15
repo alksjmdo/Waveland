@@ -61,7 +61,13 @@ Item {
     Timer {
         id: hideTimer
         interval: 3000
-        onTriggered: volumeModule.active = false
+        onTriggered: {
+            if (volumeModule.pillHovered) {
+                hideTimer.restart()
+            } else {
+                volumeModule.active = false
+            }
+        }
     }
 
     Timer {
