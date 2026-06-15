@@ -617,6 +617,7 @@ Item {
     Rectangle {
         id: lyricsBgTint
         anchors.fill: parent
+        radius: pillRadius > 0 ? pillRadius : parent.height / 2
         color: musicModule._coverPrimary
         opacity: musicModule.lyricsMode ? 0.12 : 0
         Behavior on color {
