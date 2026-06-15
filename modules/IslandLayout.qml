@@ -163,8 +163,6 @@ Item {
 
     onHoveredChanged: {
         recalc()
-        if (!hovered && workspaceModule.overviewExpanded)
-            workspaceModule.overviewExpanded = false
     }
 
     Component.onCompleted: recalc()
