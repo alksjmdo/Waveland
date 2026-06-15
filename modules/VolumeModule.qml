@@ -29,6 +29,11 @@ Item {
         NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
     }
 
+    function sinkAudio() {
+        var node = Pipewire.defaultAudioSink
+        return node ? node.audio : null
+    }
+
     onPillHoveredChanged: {
         if (pillHovered) {
             _shownByHover = true
@@ -59,10 +64,23 @@ Item {
         onTriggered: volumeModule.active = false
     }
 
-    Connections {
-        target: Pipewire.defaultAudioSink.audio
-        function onVolumeChanged() { volumeModule.showVolume() }
-        function onMutedChanged() { volumeModule.showVolume() }
+    Timer {
+        id: volumePollTimer
+        interval: 300
+        running: volumeModule._ready
+        repeat: true
+        property double _lastVol: -1
+        property bool _lastMuted: false
+        onTriggered: {
+            var a = volumeModule.sinkAudio()
+            if (!a) return
+            var vol = a.muted ? 0 : a.volume
+            if (vol !== _lastVol || a.muted !== _lastMuted) {
+                _lastVol = vol
+                _lastMuted = a.muted
+                volumeModule.showVolume()
+            }
+        }
     }
 
     Timer {
@@ -86,9 +104,11 @@ Item {
     }
 
     function volumeIcon() {
-        if (audio.muted || audio.volume === 0) return "󰝟"
-        if (audio.volume <= 0.33) return "󰕿"
-        if (audio.volume <= 0.66) return "󰖀"
+        var a = sinkAudio()
+        if (!a) return "󰕾"
+        if (a.muted || a.volume === 0) return "󰝟"
+        if (a.volume <= 0.33) return "󰕿"
+        if (a.volume <= 0.66) return "󰖀"
         return "󰕾"
     }
 
@@ -110,10 +130,12 @@ Item {
 
                 onPaint: {
                     if (width < 4 || height < 4) return
+                    var a = volumeModule.sinkAudio()
+                    if (!a) return
                     var ctx = getContext("2d")
                     ctx.clearRect(0, 0, width, height)
 
-                    var vol = volumeModule.audio.muted ? 0 : volumeModule.audio.volume
+                    var vol = a.muted ? 0 : a.volume
                     if (vol <= 0) return
 
                     var cx = width / 2
@@ -142,7 +164,10 @@ Item {
 
         Text {
             id: volPct
-            text: Math.round(volumeModule.audio.volume * 100) + "%"
+            text: {
+                var a = volumeModule.sinkAudio()
+                return a ? Math.round(a.volume * 100) + "%" : "0%"
+            }
             font.family: "JetBrainsMonoNL Nerd Font"
             font.pixelSize: 13
             color: "#cdd6f4"
