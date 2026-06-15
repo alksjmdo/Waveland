@@ -14,7 +14,7 @@ Item {
     property int minWidth: 280
     property int minClockGap: 16
     property bool hovered: false
-    property int hoverBonusH: 6
+    property int hoverBonusH: 8
     property alias workspaceModule: workspaceModule
     property alias trayModule: trayModule
     property alias musicModule: musicModule

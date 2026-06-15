@@ -21,7 +21,7 @@ Item {
     property bool networkExpanded: false
 
     on_ContentVisibleChanged: {
-        if (!_contentVisible) networkModule.active = false
+        if (!_contentVisible) hideActiveTimer.restart()
     }
 
     property real _opacity: _contentVisible ? 1 : 0
@@ -101,8 +101,14 @@ Item {
     }
 
     Timer {
+        id: hideActiveTimer
+        interval: 250
+        onTriggered: networkModule.active = false
+    }
+
+    Timer {
         id: showContentTimer
-        interval: 220
+        interval: 600
         onTriggered: networkModule._contentVisible = true
     }
 
