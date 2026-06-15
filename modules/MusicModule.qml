@@ -18,6 +18,12 @@ Item {
     property string trackArtUrl: ""
     property var activePlayer: null
 
+    property string _coverPrimary: "#cba6f7"
+    property string _coverSecondary: "#b4befe"
+    property string _coverTertiary: "#f5c2e7"
+
+    property string _lastArtUrl: ""
+
     property bool lyricsMode: false
     property var _lrcLines: []
     property int _currentLyricIndex: -1
@@ -111,6 +117,7 @@ Item {
                     trackTitle = newTitle
                     trackArtist = newArtist
                     trackArtUrl = p.trackArtUrl || ""
+                    generateColors()
                 }
             }
         }
@@ -136,6 +143,7 @@ Item {
                 trackTitle = pp.trackTitle || ""
                 trackArtist = pp.trackArtist || ""
                 trackArtUrl = pp.trackArtUrl || ""
+                generateColors()
             }
             _hasPlayer = true
             if (!_pauseExpired && !_pauseTimer.running) _pauseTimer.restart()
@@ -152,11 +160,51 @@ Item {
 
     Component.onCompleted: refreshState()
 
+    function generateColors() {
+        if (trackArtUrl === "" || trackArtUrl === _lastArtUrl) return
+        _lastArtUrl = trackArtUrl
+        var url = trackArtUrl
+        var cmd = "mkdir -p /tmp/waveland_art && "
+        if (url.indexOf("file://") === 0) {
+            cmd += "cp " + url.substring(7) + " /tmp/waveland_art/cover 2>/dev/null"
+        } else {
+            cmd += "curl -sLo /tmp/waveland_art/cover '" + url + "' 2>/dev/null"
+        }
+        cmd += " && matugen image /tmp/waveland_art/cover --prefer saturation -j hex 2>/dev/null"
+        matugenProc.exec(["sh", "-c", cmd])
+    }
+
     Timer {
         interval: 3000
         running: true
         repeat: true
         onTriggered: musicModule.refreshState()
+    }
+
+    Process {
+        id: matugenProc
+        running: false
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var raw = text.trim()
+                if (!raw) return
+                try {
+                    var data = JSON.parse(raw)
+                    if (data && data.colors) {
+                        var dark = function(k) {
+                            return data.colors[k] && data.colors[k].dark ? data.colors[k].dark.color : ""
+                        }
+                        var p = dark("primary")
+                        var s = dark("secondary")
+                        var t = dark("tertiary")
+                        if (p) musicModule._coverPrimary = p
+                        if (s) musicModule._coverSecondary = s
+                        if (t) musicModule._coverTertiary = t
+                    }
+                } catch(e) {}
+            }
+        }
     }
 
     Timer {

@@ -382,7 +382,10 @@ Item {
                     text: "󰽰"
                     font.family: "JetBrainsMonoNL Nerd Font"
                     font.pixelSize: 20
-                    color: "#cba6f7"
+                    color: musicModule._coverSecondary
+                    Behavior on color {
+                        ColorAnimation { duration: 500 }
+                    }
                     anchors.right: parent.right
                     anchors.rightMargin: 4
                     anchors.verticalCenter: parent.verticalCenter
@@ -481,7 +484,7 @@ Item {
                             text: albumArtContainer.artPlaying ? "\uF04D" : "\uF04B"
                             font.family: "JetBrainsMonoNL Nerd Font"
                             font.pixelSize: 18
-                            color: "#cba6f7"
+                color: musicModule._coverPrimary
                             anchors.verticalCenter: parent.verticalCenter
                             opacity: layout.hovered ? 1 : 0
                             Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.InOutQuad } }
@@ -539,7 +542,10 @@ Item {
                         text: "󰂞"
                         font.family: "JetBrainsMonoNL Nerd Font"
                         font.pixelSize: 18
-                        color: "#cba6f7"
+                    color: musicModule._coverSecondary
+                    Behavior on color {
+                        ColorAnimation { duration: 500 }
+                    }
                         opacity: workspaceModule.notifOpacity
                         visible: workspaceModule.notifOpacity > 0.01
                         anchors.right: networkModule.left
@@ -572,7 +578,10 @@ Item {
                 width: 2
                 height: model.barHeight
                 radius: 1
-                color: "#cba6f7"
+                color: musicModule._coverPrimary
+                Behavior on color {
+                    ColorAnimation { duration: 500 }
+                }
                 anchors.verticalCenter: parent.verticalCenter
 
                 Behavior on height {
@@ -598,7 +607,10 @@ Item {
                 width: 2
                 height: model.barHeight
                 radius: 1
-                color: "#cba6f7"
+                color: musicModule._coverPrimary
+                Behavior on color {
+                    ColorAnimation { duration: 500 }
+                }
                 anchors.verticalCenter: parent.verticalCenter
 
                 Behavior on height {
@@ -629,7 +641,10 @@ Item {
             text: "󰽰"
             font.family: "JetBrainsMonoNL Nerd Font"
             font.pixelSize: 20
-            color: "#cba6f7"
+            color: musicModule._coverSecondary
+            Behavior on color {
+                ColorAnimation { duration: 500 }
+            }
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
 
@@ -666,7 +681,10 @@ Item {
                         text: "\uF048"
                         font.family: "JetBrainsMonoNL Nerd Font"
                         font.pixelSize: 16
-                        color: "#cdd6f4"
+                        color: musicModule._coverSecondary
+                        Behavior on color {
+                            ColorAnimation { duration: 500 }
+                        }
                         anchors.verticalCenter: parent.verticalCenter
                         opacity: layout.hovered ? 1 : 0
                         Behavior on opacity {
@@ -697,7 +715,10 @@ Item {
                         text: musicModule.isPlaying ? "\uF04D" : "\uF04B"
                         font.family: "JetBrainsMonoNL Nerd Font"
                         font.pixelSize: 16
-                        color: "#cba6f7"
+                        color: musicModule._coverPrimary
+                        Behavior on color {
+                            ColorAnimation { duration: 500 }
+                        }
                         anchors.verticalCenter: parent.verticalCenter
                         opacity: layout.hovered ? 1 : 0
                         Behavior on opacity {
@@ -728,7 +749,10 @@ Item {
                         text: "\uF051"
                         font.family: "JetBrainsMonoNL Nerd Font"
                         font.pixelSize: 16
-                        color: "#cdd6f4"
+                        color: musicModule._coverSecondary
+                        Behavior on color {
+                            ColorAnimation { duration: 500 }
+                        }
                         anchors.verticalCenter: parent.verticalCenter
                         opacity: layout.hovered ? 1 : 0
                         Behavior on opacity {
@@ -862,9 +886,15 @@ Item {
                             text: workspaceModule.iconForWs(wsPill.wsId)
                             font.family: "JetBrainsMonoNL Nerd Font"
                             font.pixelSize: 20
-                            color: "#cba6f7"
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
+                color: musicModule._coverPrimary
+                Behavior on color {
+                    ColorAnimation { duration: 500 }
+                }
+                anchors.verticalCenter: parent.verticalCenter
+
+                Behavior on height {
+                    NumberAnimation { duration: 80; easing.type: Easing.OutQuad }
+                }
 
                         Repeater {
                             model: workspaceModule.windowsOfWs(wsPill.wsId)
@@ -1263,6 +1293,7 @@ Item {
                 pillRadius = 0
         }
     }
+}
 }
 }
 }
