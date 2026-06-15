@@ -17,6 +17,7 @@ Item {
     property bool active: false
     property bool pillHovered: false
     property bool _ready: false
+    property bool _shownByHover: false
 
     property var audio: Pipewire.defaultAudioSink.audio
 
@@ -27,9 +28,11 @@ Item {
 
     onPillHoveredChanged: {
         if (pillHovered) {
+            _shownByHover = true
             volumeModule.show()
-        } else if (volumeModule.active) {
-            hideTimer.restart()
+        } else if (_shownByHover) {
+            _shownByHover = false
+            volumeModule.active = false
         }
     }
 
@@ -43,22 +46,13 @@ Item {
     Timer {
         id: hideTimer
         interval: 3000
-        onTriggered: {
-            if (!volumeModule.pillHovered)
-                volumeModule.active = false
-            else
-                hideTimer.restart()
-        }
+        onTriggered: volumeModule.active = false
     }
 
     Connections {
         target: Pipewire.defaultAudioSink.audio
-        function onVolumeChanged() {
-            if (volumeModule._ready) volumeModule.show()
-        }
-        function onMutedChanged() {
-            if (volumeModule._ready) volumeModule.show()
-        }
+        function onVolumeChanged() { volumeModule.showVolume() }
+        function onMutedChanged() { volumeModule.showVolume() }
     }
 
     Timer {
@@ -71,6 +65,12 @@ Item {
         if (!active) volumeModule.active = true
         hideTimer.restart()
         repaintTimer.restart()
+    }
+
+    function showVolume() {
+        if (!_ready) return
+        _shownByHover = false
+        show()
     }
 
     function volumeIcon() {
