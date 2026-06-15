@@ -27,6 +27,7 @@ Item {
         y: glowMargin
         color: "#1e1e2e"
         radius: container.pillRadius > 0 ? container.pillRadius : height / 2
+        clip: true
     }
 
     property bool hovered: hoverArea.containsMouse
