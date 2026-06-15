@@ -107,7 +107,7 @@ Item {
                 hideTimer.restart()
             } else {
                 brightnessModule._contentVisible = false
-                brightnessModule.hideActiveTimer.restart()
+                hideActiveTimer.restart()
             }
         }
     }

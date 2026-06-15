@@ -77,7 +77,7 @@ Item {
                 hideTimer.restart()
             } else {
                 volumeModule._contentVisible = false
-                volumeModule.hideActiveTimer.restart()
+                hideActiveTimer.restart()
             }
         }
     }
