@@ -614,6 +614,20 @@ Item {
         }
     }
 
+    Rectangle {
+        id: lyricsBgTint
+        anchors.fill: parent
+        color: musicModule._coverPrimary
+        opacity: musicModule.lyricsMode ? 0.12 : 0
+        Behavior on color {
+            ColorAnimation { duration: 500 }
+        }
+        Behavior on opacity {
+            NumberAnimation { duration: 300; easing.type: Easing.InOutQuad }
+        }
+        visible: opacity > 0.01
+    }
+
     Item {
         id: lyricsOverlay
         anchors.left: leftWaves.right
@@ -790,7 +804,10 @@ Item {
             anchors.rightMargin: 8
             anchors.verticalCenter: parent.verticalCenter
             text: musicModule._displayText
-            color: "#cdd6f4"
+            color: musicModule._coverPrimary
+            Behavior on color {
+                ColorAnimation { duration: 500 }
+            }
             font.pixelSize: 14
             font.family: "JetBrainsMonoNL Nerd Font"
 
