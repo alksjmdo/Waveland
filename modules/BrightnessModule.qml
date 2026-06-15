@@ -113,9 +113,9 @@ Item {
     }
 
     function brightnessIcon() {
-        if (brightness <= 0.33) return "󰃚"
+        if (brightness <= 0.33) return "󰃜"
         if (brightness <= 0.66) return "󰃛"
-        return "󰃜"
+        return "󰃚"
     }
 
     Row {
