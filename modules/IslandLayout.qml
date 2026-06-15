@@ -121,7 +121,6 @@ Item {
             return
         }
         if (musicModule.lyricsMode) {
-            pillRadius = 0
             var lyricsContentW = lyricsNoteIcon.implicitWidth + 8 + lyricDisplayText.implicitWidth + 8 + controlsContent.implicitWidth
             var totalW = leftWaves.implicitWidth + rightWaves.implicitWidth + lyricsContentW + 52
             targetWidth = Math.max(300, totalW)
