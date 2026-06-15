@@ -1279,6 +1279,12 @@ Item {
         onTriggered: layout.recalc()
     }
 
+    Item {
+        width: 1
+        height: 1
+        opacity: 0
+    }
+
     Timer {
         id: radiusRestoreTimer
         interval: 400
