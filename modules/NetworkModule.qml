@@ -164,14 +164,16 @@ Item {
             width: _hoverOpacity > 0.01 ? implicitWidth : 0
             clip: true
         }
+    }
 
-        MouseArea {
-            anchors.fill: parent
-            cursorShape: Qt.PointingHandCursor
-            onClicked: {
-                if (networkModule.pillHovered)
-                    networkModule.networkExpanded = !networkModule.networkExpanded
-            }
+    MouseArea {
+        width: row.implicitWidth
+        height: 42
+        anchors.verticalCenter: parent.verticalCenter
+        cursorShape: Qt.PointingHandCursor
+        onClicked: {
+            if (networkModule.pillHovered)
+                networkModule.networkExpanded = !networkModule.networkExpanded
         }
     }
 }
