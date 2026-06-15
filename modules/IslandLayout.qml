@@ -564,8 +564,8 @@ Item {
         anchors.rightMargin: 10
         anchors.verticalCenter: parent.verticalCenter
         spacing: 4
-        opacity: layout._musicOpacity
-        visible: layout._musicOpacity > 0.01
+        opacity: layout._musicOpacity * (musicModule.isPlaying ? 1 : 0)
+        visible: layout._musicOpacity > 0.01 && musicModule.isPlaying
         Repeater {
             model: waveModel
             Rectangle {
@@ -589,8 +589,8 @@ Item {
         anchors.leftMargin: 10
         anchors.verticalCenter: parent.verticalCenter
         spacing: 4
-        opacity: layout._musicOpacity
-        visible: layout._musicOpacity > 0.01
+        opacity: layout._musicOpacity * (musicModule.isPlaying ? 1 : 0)
+        visible: layout._musicOpacity > 0.01 && musicModule.isPlaying
         layoutDirection: Qt.RightToLeft
         Repeater {
             model: waveModel
