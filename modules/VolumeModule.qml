@@ -43,7 +43,7 @@ Item {
             _shownByHover = false
             _pctVisible = false
             _contentVisible = false
-            _hideActiveTimer.restart()
+            hideActiveTimer.restart()
         }
     }
 
@@ -52,6 +52,12 @@ Item {
         interval: 1000
         running: true
         onTriggered: volumeModule._ready = true
+    }
+
+    Timer {
+        id: hideActiveTimer
+        interval: 250
+        onTriggered: volumeModule.active = false
     }
 
     Timer {
@@ -71,15 +77,9 @@ Item {
                 hideTimer.restart()
             } else {
                 volumeModule._contentVisible = false
-                volumeModule._hideActiveTimer.restart()
+                volumeModule.hideActiveTimer.restart()
             }
         }
-    }
-
-    Timer {
-        id: _hideActiveTimer
-        interval: 250
-        onTriggered: volumeModule.active = false
     }
 
     Timer {
