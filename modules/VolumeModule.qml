@@ -75,13 +75,16 @@ Item {
         interval: 300
         running: volumeModule._ready
         repeat: true
-        property double _lastVol: -1
+        property double _lastVol: NaN
         property bool _lastMuted: false
         onTriggered: {
             var a = volumeModule.sinkAudio()
             if (!a) return
             var vol = a.muted ? 0 : a.volume
-            if (vol !== _lastVol || a.muted !== _lastMuted) {
+            if (isNaN(_lastVol)) {
+                _lastVol = vol
+                _lastMuted = a.muted
+            } else if (vol !== _lastVol || a.muted !== _lastMuted) {
                 _lastVol = vol
                 _lastMuted = a.muted
                 volumeModule.showVolume()
