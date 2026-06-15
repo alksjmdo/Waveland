@@ -14,8 +14,6 @@ Item {
     property int minWidth: 280
     property int minClockGap: 16
     property bool hovered: false
-    property int hoverBonusW: 10
-    property int hoverBonusH: 10
     property alias workspaceModule: workspaceModule
     property alias trayModule: trayModule
     property alias musicModule: musicModule
@@ -111,20 +109,16 @@ Item {
             pillRadius = 0
             var contentW = wsReturnBtn.implicitWidth + 8 + wsPillRow.implicitWidth
             var totalW = leftWaves.implicitWidth + rightWaves.implicitWidth + contentW + 60
-            var bonusW = hovered ? hoverBonusW : 0
-            var bonusH = hovered ? hoverBonusH : 0
-            targetWidth = Math.max(300, Math.min(700, totalW)) + bonusW
-            targetHeight = 42 + bonusH
+            targetWidth = Math.max(300, Math.min(700, totalW))
+            targetHeight = 42
             return
         }
         if (musicModule.lyricsMode) {
             pillRadius = 0
             var lyricsContentW = lyricsNoteIcon.implicitWidth + 8 + lyricDisplayText.implicitWidth
             var totalW = leftWaves.implicitWidth + rightWaves.implicitWidth + lyricsContentW + 52
-            var bonusW = hovered ? hoverBonusW : 0
-            var bonusH = hovered ? hoverBonusH : 0
-            targetWidth = Math.max(300, Math.min(600, totalW)) + bonusW
-            targetHeight = 42 + bonusH
+            targetWidth = Math.max(300, Math.min(600, totalW))
+            targetHeight = 42
             return
         }
         var lw = 0
@@ -156,11 +150,9 @@ Item {
         }
         halfWidth = Math.max(lw, rw) + minClockGap
         clockWidth = clockModule.implicitWidth
-        var bonusW = hovered ? hoverBonusW : 0
-        var bonusH = hovered ? hoverBonusH : 0
-        targetWidth = Math.max(minWidth, halfWidth * 2 + clockWidth + effectiveHPadding * 2) + bonusW
+        targetWidth = Math.max(minWidth, halfWidth * 2 + clockWidth + effectiveHPadding * 2)
         _shrinking = targetWidth < layout.implicitWidth
-        targetHeight = clockModule.implicitHeight + bonusH
+        targetHeight = clockModule.implicitHeight
     }
 
     onHoveredChanged: {
