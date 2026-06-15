@@ -20,6 +20,7 @@ Item {
     property alias musicModule: musicModule
     property alias batteryModule: batteryModule
     property alias volumeModule: volumeModule
+    property alias brightnessModule: brightnessModule
     property int musicWaveWidth: 70
 
     PwNodePeakMonitor {
@@ -138,7 +139,7 @@ Item {
         }
         leftContentWidth = lw
         rightContentWidth = rw
-        lw += spacing + batteryModule.width + spacing + volumeModule.width
+        lw += spacing + batteryModule.width + spacing + volumeModule.width + spacing + brightnessModule.width
         rw += spacing + notifBell.implicitWidth
         if (musicModule.isPlaying) {
             lw += spacing + 20
@@ -214,6 +215,11 @@ Item {
         function onWidthChanged() { layout.recalc() }
     }
 
+    Connections {
+        target: brightnessModule
+        function onWidthChanged() { layout.recalc() }
+    }
+
     Item {
         id: layoutContent
         anchors.left: parent.left
@@ -256,6 +262,11 @@ Item {
                         }
                         VolumeModule {
                             id: volumeModule
+                            pillHovered: layout.hovered
+                            Layout.fillWidth: false
+                        }
+                        BrightnessModule {
+                            id: brightnessModule
                             pillHovered: layout.hovered
                             Layout.fillWidth: false
                         }
