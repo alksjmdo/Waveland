@@ -19,6 +19,7 @@ Item {
     property bool _ready: false
     property bool _shownByHover: false
     property bool _contentVisible: false
+    property bool _pctVisible: false
 
     on_ContentVisibleChanged: {
         if (_contentVisible) repaintTimer.restart()
@@ -40,6 +41,7 @@ Item {
             volumeModule.show()
         } else if (_shownByHover) {
             _shownByHover = false
+            _pctVisible = false
             _contentVisible = false
             volumeModule.active = false
         }
@@ -55,7 +57,10 @@ Item {
     Timer {
         id: showContentTimer
         interval: 500
-        onTriggered: volumeModule._contentVisible = true
+        onTriggered: {
+            volumeModule._contentVisible = true
+            if (volumeModule.pillHovered) volumeModule._pctVisible = true
+        }
     }
 
     Timer {
@@ -188,7 +193,7 @@ Item {
             color: "#cdd6f4"
             anchors.verticalCenter: parent.verticalCenter
 
-            property real _hoverOpacity: volumeModule.pillHovered && volumeModule._contentVisible ? 1 : 0
+            property real _hoverOpacity: volumeModule._pctVisible ? 1 : 0
             Behavior on _hoverOpacity {
                 NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
             }

@@ -18,6 +18,7 @@ Item {
     property bool pillHovered: false
     property bool _shownByHover: false
     property bool _contentVisible: false
+    property bool _pctVisible: false
 
     on_ContentVisibleChanged: {
         if (_contentVisible) repaintTimer.restart()
@@ -37,6 +38,7 @@ Item {
             brightnessModule.show()
         } else if (_shownByHover) {
             _shownByHover = false
+            _pctVisible = false
             _contentVisible = false
             brightnessModule.active = false
         }
@@ -85,7 +87,10 @@ Item {
     Timer {
         id: showContentTimer
         interval: 500
-        onTriggered: brightnessModule._contentVisible = true
+        onTriggered: {
+            brightnessModule._contentVisible = true
+            if (brightnessModule.pillHovered) brightnessModule._pctVisible = true
+        }
     }
 
     Timer {
@@ -184,7 +189,7 @@ Item {
             color: "#cdd6f4"
             anchors.verticalCenter: parent.verticalCenter
 
-            property real _hoverOpacity: brightnessModule.pillHovered && brightnessModule._contentVisible ? 1 : 0
+            property real _hoverOpacity: brightnessModule._pctVisible ? 1 : 0
             Behavior on _hoverOpacity {
                 NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
             }
