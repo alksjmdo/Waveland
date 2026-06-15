@@ -61,7 +61,7 @@ Item {
     property int rightContentWidth: 0
     property int halfWidth: 0
     property int clockWidth: 64
-    property int effectiveHPadding: hPadding + (musicModule._showControls ? musicWaveWidth : 0)
+    property int effectiveHPadding: hPadding + ((musicModule._showControls && musicModule.isPlaying) ? musicWaveWidth : 0)
 
     Behavior on effectiveHPadding {
         NumberAnimation { duration: 300; easing.type: Easing.InOutQuad }
