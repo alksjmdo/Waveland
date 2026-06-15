@@ -36,11 +36,16 @@ Item {
         onTriggered: volumeModule.active = false
     }
 
+    Timer {
+        id: repaintTimer
+        interval: 50
+        onTriggered: ringCanvas.requestPaint()
+    }
+
     function show() {
-        displayVolume = audio.muted ? 0 : audio.volume
         if (!active) volumeModule.active = true
         hideTimer.restart()
-        ringCanvas.requestPaint()
+        repaintTimer.restart()
     }
 
     function volumeIcon() {
@@ -57,10 +62,11 @@ Item {
         visible: volumeModule._opacity > 0.01
 
         onPaint: {
+            if (width < 4 || height < 4) return
             var ctx = getContext("2d")
             ctx.clearRect(0, 0, width, height)
 
-            var vol = volumeModule.displayVolume
+            var vol = volumeModule.audio.muted ? 0 : volumeModule.audio.volume
             if (vol <= 0) return
 
             var cx = width / 2
