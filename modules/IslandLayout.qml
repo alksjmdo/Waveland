@@ -147,8 +147,8 @@ Item {
         }
         leftContentWidth = lw
         rightContentWidth = rw
-        lw += spacing + batteryModule.width + spacing + volumeModule.width + spacing + brightnessModule.width
-        rw += spacing + networkModule.width + spacing + notifBell.implicitWidth
+        lw += spacing + batteryModule.implicitWidth + spacing + volumeModule.implicitWidth + spacing + brightnessModule.implicitWidth
+        rw += spacing + networkModule.implicitWidth + spacing + notifBell.implicitWidth
         if (musicModule.isPlaying) {
             lw += spacing + 20
             var artW = layout.hovered ? 100 : 28
