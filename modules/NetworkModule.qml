@@ -99,6 +99,7 @@ Item {
 
     function showNetwork() {
         _shownByHover = false
+        _pctVisible = false
         show()
     }
 
