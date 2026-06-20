@@ -4,7 +4,7 @@ import Quickshell.Io
 
 Item {
     id: brightnessModule
-    implicitWidth: active ? iconCell.width + row.spacing + brightPct.implicitWidth : 0
+    implicitWidth: hoverBehavior.active ? iconCell.width + row.spacing + brightPct.implicitWidth : 0
     implicitHeight: 42
     width: implicitWidth
     clip: true
@@ -14,34 +14,27 @@ Item {
     }
 
     property alias component: brightnessModule
-    property bool active: false
     property bool pillHovered: false
-    property bool _shownByHover: false
-    property bool _contentVisible: false
-    property bool _pctVisible: false
-
-    on_ContentVisibleChanged: {
-        if (_contentVisible) repaintTimer.restart()
-    }
-
-    property real _opacity: _contentVisible ? 1 : 0
-    Behavior on _opacity {
-        NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
-    }
 
     property double brightness: 0
     property bool _ready: false
 
+    HoverBehavior {
+        id: hoverBehavior
+    }
+
+    property bool _contentVisible: hoverBehavior.contentVisible
+    on_ContentVisibleChanged: {
+        if (_contentVisible) repaintTimer.restart()
+    }
+
+    property real _opacity: hoverBehavior.contentVisible ? 1 : 0
+    Behavior on _opacity {
+        NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
+    }
+
     onPillHoveredChanged: {
-        if (pillHovered) {
-            _shownByHover = true
-            brightnessModule.show()
-        } else if (_shownByHover) {
-            _shownByHover = false
-            _pctVisible = false
-            _contentVisible = false
-            hideActiveTimer.restart()
-        }
+        hoverBehavior.onPillHovered(pillHovered)
     }
 
     Process {
@@ -85,53 +78,19 @@ Item {
     }
 
     Timer {
-        id: hideActiveTimer
-        interval: 250
-        onTriggered: brightnessModule.active = false
-    }
-
-    Timer {
-        id: showContentTimer
-        interval: 600
-        onTriggered: {
-            brightnessModule._contentVisible = true
-            if (brightnessModule.pillHovered) brightnessModule._pctVisible = true
-        }
-    }
-
-    Timer {
-        id: hideTimer
-        interval: 3000
-        onTriggered: {
-            if (brightnessModule.pillHovered) {
-                hideTimer.restart()
-            } else {
-                brightnessModule._contentVisible = false
-                hideActiveTimer.restart()
-            }
-        }
-    }
-
-    Timer {
         id: repaintTimer
         interval: 50
         onTriggered: ringCanvas.requestPaint()
     }
 
     function show() {
-        if (!active) {
-            _contentVisible = false
-            brightnessModule.active = true
-            showContentTimer.restart()
-        } else {
-            repaintTimer.restart()
-        }
-        hideTimer.restart()
+        hoverBehavior.show()
+        repaintTimer.restart()
     }
 
     function showBrightness() {
-        _shownByHover = false
-        show()
+        hoverBehavior.showFromEvent()
+        repaintTimer.restart()
     }
 
     function brightnessIcon() {
@@ -196,7 +155,7 @@ Item {
             color: "#cdd6f4"
             anchors.verticalCenter: parent.verticalCenter
 
-            property real _hoverOpacity: brightnessModule._pctVisible ? 1 : 0
+            property real _hoverOpacity: hoverBehavior.pctVisible ? 1 : 0
             Behavior on _hoverOpacity {
                 NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
             }

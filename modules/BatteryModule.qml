@@ -5,7 +5,7 @@ import Quickshell.Io
 Item {
     id: batteryModule
     implicitHeight: 42
-    implicitWidth: active ? iconCell.width + row.spacing + battPct.implicitWidth : row.implicitWidth
+    implicitWidth: hoverBehavior.active ? iconCell.width + row.spacing + battPct.implicitWidth : row.implicitWidth
     width: implicitWidth
     height: 42
 
@@ -14,9 +14,6 @@ Item {
     }
     property alias component: batteryModule
     property bool pillHovered: false
-    property bool active: false
-    property bool _contentVisible: false
-    property bool _pctVisible: false
 
     property double percentage: 100
     property string status: "Full"
@@ -24,29 +21,19 @@ Item {
     property string powerProfile: "balanced"
     property bool profileMode: false
 
+    HoverBehavior {
+        id: hoverBehavior
+        hasAutoHide: false
+        trackHoverSource: false
+        setPctWithContent: true
+    }
+
     onPercentageChanged: ringCanvas.requestPaint()
     onProfileModeChanged: ringCanvas.requestPaint()
     onPowerProfileChanged: ringCanvas.requestPaint()
 
     onPillHoveredChanged: {
-        if (pillHovered) {
-            batteryModule.show()
-        } else {
-            batteryModule.hide()
-        }
-    }
-
-    function show() {
-        if (!active) {
-            batteryModule.active = true
-            showContentTimer.restart()
-        }
-    }
-
-    function hide() {
-        _pctVisible = false
-        _contentVisible = false
-        hideActiveTimer.restart()
+        hoverBehavior.onPillHovered(pillHovered)
     }
 
     function ringColor() {
@@ -138,21 +125,6 @@ Item {
         id: profileExitTimer
         interval: 5000
         onTriggered: batteryModule.profileMode = false
-    }
-
-    Timer {
-        id: hideActiveTimer
-        interval: 250
-        onTriggered: batteryModule.active = false
-    }
-
-    Timer {
-        id: showContentTimer
-        interval: 600
-        onTriggered: {
-            batteryModule._contentVisible = true
-            batteryModule._pctVisible = true
-        }
     }
 
     function toggleProfile() {
@@ -253,7 +225,7 @@ Item {
             color: "#cdd6f4"
             anchors.verticalCenter: parent.verticalCenter
 
-            property real _opacity: batteryModule._pctVisible && !batteryModule.profileMode ? 1 : 0
+            property real _opacity: hoverBehavior.pctVisible && !batteryModule.profileMode ? 1 : 0
             Behavior on _opacity {
                 NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
             }

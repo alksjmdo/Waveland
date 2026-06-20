@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
-import Quickshell.Services.Notifications
 
 Item {
     id: workspaceModule
@@ -371,85 +370,6 @@ Item {
                     }
                 }
             }
-        }
-    }
-
-    property bool notifActive: false
-    property bool notifFading: false
-    property real notifOpacity: 0
-    property bool notifCenterExpanded: false
-    property var _notificationHistory: []
-
-    Behavior on notifOpacity {
-        NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
-    }
-
-    NotificationServer {
-        bodySupported: true
-        bodyMarkupSupported: true
-        bodyHyperlinksSupported: true
-        bodyImagesSupported: true
-        onNotification: function(notification) {
-            var item = {
-                summary: notification.summary || "",
-                body: notification.body || "",
-                appName: notification.appName || "",
-                appIcon: notification.appIcon || "",
-                time: new Date().toLocaleString(Qt.locale("en_US"), "HH:mm")
-            }
-            var newList = [item]
-            for (var i = 0; i < workspaceModule._notificationHistory.length; i++)
-                newList.push(workspaceModule._notificationHistory[i])
-            workspaceModule._notificationHistory = newList.slice(0, 20)
-            workspaceModule.notifActive = true
-            workspaceModule.refreshNotifIcon()
-        }
-    }
-
-    property bool clearNotification: false
-
-    onClearNotificationChanged: {
-        if (clearNotification) {
-            _notificationHistory = []
-            refreshNotifIcon()
-            clearNotification = false
-            notifCenterExpanded = false
-        }
-    }
-
-    function refreshNotifIcon() {
-        notifOpacity = _notificationHistory.length > 0 ? 0.5 : 0
-    }
-
-    onNotifCenterExpandedChanged: {
-        if (notifCenterExpanded) {
-            notifOpacity = 1
-        } else {
-            refreshNotifIcon()
-        }
-    }
-
-    onNotifActiveChanged: {
-        if (notifActive) {
-            notifOpacity = 1
-            fadeTimer.restart()
-        }
-    }
-
-    Timer {
-        id: fadeTimer
-        interval: 5000
-        onTriggered: {
-            workspaceModule.notifActive = false
-            if (!workspaceModule.notifCenterExpanded) {
-                workspaceModule.refreshNotifIcon()
-            }
-        }
-    }
-
-    onNotifOpacityChanged: {
-        if (notifOpacity === 0 && notifFading) {
-            notifFading = false
         }
     }
 }

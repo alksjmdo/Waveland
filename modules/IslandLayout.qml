@@ -4,6 +4,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Pipewire
 import Quickshell.Widgets
+
 Item {
     id: layout
     anchors.centerIn: parent
@@ -22,38 +23,8 @@ Item {
     property alias volumeModule: volumeModule
     property alias brightnessModule: brightnessModule
     property alias networkModule: networkModule
+    property alias notifServer: notifServer
     property int musicWaveWidth: 70
-
-    PwNodePeakMonitor {
-        id: peakMonitor
-        node: Pipewire.defaultAudioSink
-        enabled: musicModule.isPlaying
-    }
-
-    ListModel {
-        id: waveModel
-        Component.onCompleted: {
-            for (var i = 0; i < 12; i++) append({ barHeight: 4 })
-        }
-    }
-
-    function updatePeaks() {
-        if (!peakMonitor || peakMonitor.peaks.length === 0) return
-        var peak = Math.min(1.0, peakMonitor.peak * 2.0)
-        for (var i = 0; i < 12; i++) {
-            var factor = 0.3 + Math.random() * 0.7
-            var target = Math.max(4, peak * 24 * factor)
-            waveModel.setProperty(i, "barHeight", target)
-        }
-    }
-
-    Timer {
-        id: peakTimer
-        interval: 100
-        running: musicModule.isPlaying && layout._musicOpacity > 0.5
-        repeat: true
-        onTriggered: updatePeaks()
-    }
 
     property int pillRadius: 0
 
@@ -67,7 +38,7 @@ Item {
         NumberAnimation { duration: 300; easing.type: Easing.InOutQuad }
     }
 
-    property real _musicOpacity: (musicModule._showControls || musicModule.lyricsMode) && !workspaceModule.notifCenterExpanded && !networkModule.networkExpanded && !musicModule.lyricsExpanded ? 1 : 0
+    property real _musicOpacity: (musicModule._showControls || musicModule.lyricsMode) && !notifServer.notifCenterExpanded && !networkModule.networkExpanded && !musicModule.lyricsExpanded ? 1 : 0
     Behavior on _musicOpacity {
         NumberAnimation { duration: 300; easing.type: Easing.InOutQuad }
     }
@@ -93,8 +64,21 @@ Item {
     implicitWidth: targetWidth
     implicitHeight: targetHeight
 
+    AudioPeaks {
+        id: audioPeaks
+        anchors.fill: parent
+        musicPlaying: musicModule.isPlaying
+        lyricsMode: musicModule.lyricsMode
+        peakColor: musicModule._coverPrimary
+        musicOpacity: layout._musicOpacity
+    }
+
+    NotifServerModule {
+        id: notifServer
+    }
+
     function recalc() {
-        if (workspaceModule.notifCenterExpanded) {
+        if (notifServer.notifCenterExpanded) {
             targetWidth = 840
             targetHeight = 480
             pillRadius = 16
@@ -108,10 +92,10 @@ Item {
         }
         if (workspaceModule.overviewExpanded) {
             pillRadius = 0
-            var contentW = wsReturnBtn.implicitWidth + 8 + wsPillRow.implicitWidth
-            var totalW = leftWaves.implicitWidth + rightWaves.implicitWidth + contentW + 60
-            targetWidth = Math.max(300, Math.min(700, totalW))
-            targetHeight = 42
+            var wsContentW = wsOverlay.implicitWidth
+            var wsTotalW = audioPeaks.overlayLeftInset + wsContentW + audioPeaks.overlayRightInset
+            targetWidth = Math.max(300, Math.min(700, wsTotalW + (hovered ? 20 : 0)))
+            targetHeight = 42 + (hovered ? hoverBonusH : 0)
             return
         }
         if (musicModule.lyricsExpanded) {
@@ -121,9 +105,9 @@ Item {
             return
         }
         if (musicModule.lyricsMode) {
-            var lyricsContentW = lyricsNoteIcon.implicitWidth + 8 + lyricDisplayText.implicitWidth + 8 + controlsContent.implicitWidth
-            var totalW = leftWaves.implicitWidth + rightWaves.implicitWidth + lyricsContentW + 52
-            targetWidth = Math.max(300, totalW)
+            var lyricsContentW = lyricsOverlay.implicitWidth
+            var lyricsTotalW = audioPeaks.overlayLeftInset + lyricsContentW + audioPeaks.overlayRightInset
+            targetWidth = Math.max(300, lyricsTotalW)
             targetHeight = 42 + (hovered ? hoverBonusH : 0)
             return
         }
@@ -147,8 +131,7 @@ Item {
         }
         leftContentWidth = lw
         rightContentWidth = rw
-        lw += spacing + batteryModule.implicitWidth + spacing + volumeModule.implicitWidth + spacing + brightnessModule.implicitWidth
-        rw += spacing + networkModule.implicitWidth + spacing + notifBell.implicitWidth
+        rw += spacing + notifBell.implicitWidth
         if (musicModule._showControls) {
             lw += spacing + 20
             var artW = layout.hovered ? 100 : 28
@@ -165,13 +148,59 @@ Item {
         recalc()
     }
 
-    Component.onCompleted: recalc()
+    Component.onCompleted: {
+        recalc()
+        if (eventBus) {
+            eventBus.subscribe("requestRecalc", function() { recalc() })
+            eventBus.subscribe("modeChanged", function(data) { handleModeChange(data) })
+        }
+    }
+
+    function handleModeChange(data) {
+        if (!data) return
+        if (data.mode === "notifCenterExpanded" && data.value) {
+            if (musicModule.lyricsMode) musicModule.exitLyricsMode()
+            if (musicModule.lyricsExpanded) musicModule.lyricsExpanded = false
+        }
+        if (data.mode === "overviewExpanded" && data.value) {
+            if (notifServer.notifCenterExpanded) notifServer.notifCenterExpanded = false
+            if (musicModule.lyricsMode) musicModule.exitLyricsMode()
+            if (musicModule.lyricsExpanded) musicModule.lyricsExpanded = false
+            workspaceModule.resolveAllIcons()
+        } else if (data.mode === "overviewExpanded" && !data.value && layout.hovered) {
+            volumeModule.show()
+            brightnessModule.show()
+        }
+        if (data.mode === "lyricsExpanded" && data.value) {
+            if (notifServer.notifCenterExpanded) notifServer.notifCenterExpanded = false
+            if (workspaceModule.overviewExpanded) workspaceModule.overviewExpanded = false
+            if (networkModule.networkExpanded) networkModule.networkExpanded = false
+        } else if (data.mode === "lyricsExpanded" && !data.value) {
+            radiusRestoreTimer.restart()
+        }
+        if (data.mode === "networkExpanded" && !data.value) {
+            radiusRestoreTimer.restart()
+            if (layout.hovered) {
+                volumeModule.show()
+                brightnessModule.show()
+            }
+        }
+        if (data.mode === "networkExpanded" && data.value) {
+            if (notifServer.notifCenterExpanded) notifServer.notifCenterExpanded = false
+            if (workspaceModule.overviewExpanded) workspaceModule.overviewExpanded = false
+            if (musicModule.lyricsMode) musicModule.exitLyricsMode()
+            if (musicModule.lyricsExpanded) musicModule.lyricsExpanded = false
+        }
+        recalc()
+    }
 
     Connections {
-        target: workspaceModule
+        target: notifServer
         function onNotifCenterExpandedChanged() {
-            layout.recalc()
-            if (!workspaceModule.notifCenterExpanded) {
+            if (eventBus) {
+                eventBus.publish("modeChanged", { mode: "notifCenterExpanded", value: notifServer.notifCenterExpanded })
+            }
+            if (!notifServer.notifCenterExpanded) {
                 notifCenter.expandedIndex = -1
                 radiusRestoreTimer.restart()
                 if (layout.hovered) {
@@ -179,170 +208,72 @@ Item {
                     brightnessModule.show()
                 }
             }
-            if (workspaceModule.notifCenterExpanded) {
-                if (musicModule.lyricsMode)
-                    musicModule.exitLyricsMode()
-                if (musicModule.lyricsExpanded)
-                    musicModule.lyricsExpanded = false
-            }
         }
         function onNotifActiveChanged() {
-            layout.recalc()
-            if (workspaceModule.notifActive && musicModule.lyricsMode)
+            recalc()
+            if (notifServer.notifActive && musicModule.lyricsMode)
                 musicModule.exitLyricsMode()
-            if (workspaceModule.notifActive && workspaceModule.overviewExpanded)
+            if (notifServer.notifActive && workspaceModule.overviewExpanded)
                 workspaceModule.overviewExpanded = false
         }
         function onNotifFadingChanged() {
-            layout.recalc()
+            recalc()
         }
+    }
+
+    Connections {
+        target: workspaceModule
         function onOverviewExpandedChanged() {
-            layout.recalc()
-            if (workspaceModule.overviewExpanded) {
-                if (workspaceModule.notifCenterExpanded)
-                    workspaceModule.notifCenterExpanded = false
-                if (musicModule.lyricsMode)
-                    musicModule.exitLyricsMode()
-                if (musicModule.lyricsExpanded)
-                    musicModule.lyricsExpanded = false
-                workspaceModule.resolveAllIcons()
-            } else if (layout.hovered) {
-                volumeModule.show()
-                brightnessModule.show()
+            if (eventBus) {
+                eventBus.publish("modeChanged", { mode: "overviewExpanded", value: workspaceModule.overviewExpanded })
             }
         }
     }
 
     Connections {
         target: musicModule
-        function onIsPlayingChanged() {
-            layout.recalc()
-        }
+        function onIsPlayingChanged() { recalc() }
         function onLyricsModeChanged() {
-            layout.recalc()
+            recalc()
+            if (musicModule.lyricsMode && eventBus) {
+                eventBus.publish("modeChanged", { mode: "lyricsMode", value: true })
+            }
         }
         function onLyricsExpandedChanged() {
-            layout.recalc()
-            if (musicModule.lyricsExpanded) {
-                if (workspaceModule.notifCenterExpanded)
-                    workspaceModule.notifCenterExpanded = false
-                if (workspaceModule.overviewExpanded)
-                    workspaceModule.overviewExpanded = false
-                if (networkModule.networkExpanded)
-                    networkModule.networkExpanded = false
-            } else {
-                radiusRestoreTimer.restart()
+            if (eventBus) {
+                eventBus.publish("modeChanged", { mode: "lyricsExpanded", value: musicModule.lyricsExpanded })
             }
         }
     }
 
     Connections {
         target: batteryModule
-        function onWidthChanged() { layout.recalc() }
+        function onWidthChanged() { recalc() }
     }
 
     Connections {
         target: volumeModule
-        function onWidthChanged() { layout.recalc() }
+        function onWidthChanged() { recalc() }
     }
 
     Connections {
         target: brightnessModule
-        function onWidthChanged() { layout.recalc() }
-    }
-
-    Timer {
-        id: networkRefresh
-        interval: 100
-        onTriggered: wifiScan.exec(["sh", "-c",
-            "nmcli -t -f IN-USE,SSID,SIGNAL,SECURITY dev wifi list --rescan no 2>/dev/null | grep -v '^$'"])
-    }
-
-    Process {
-        id: wifiScan
-        running: false
-
-        stdout: StdioCollector {
-            onStreamFinished: {
-                var seen = {}
-                var lines = text.trim().split("\n")
-                for (var i = 0; i < lines.length; i++) {
-                    var parts = lines[i].split(":")
-                    if (parts.length < 4 || !parts[1]) continue
-                    var ssid = parts[1]
-                    var sig = parseInt(parts[2]) || 0
-                    var inUse = parts[0] === "*"
-                    if (seen[ssid] === undefined) {
-                        seen[ssid] = { signal: sig, inUse: inUse, security: parts[3] || "", secured: parts[3] !== "" && parts[3] !== "--" }
-                    } else {
-                        if (sig > seen[ssid].signal) seen[ssid].signal = sig
-                        if (inUse) seen[ssid].inUse = true
-                        if (seen[ssid].security === "" && parts[3] !== "" && parts[3] !== "--") {
-                            seen[ssid].security = parts[3]
-                            seen[ssid].secured = true
-                        }
-                    }
-                }
-                var items = []
-                for (var key in seen) {
-                    items.push({
-                        inUse: seen[key].inUse,
-                        ssid: key,
-                        signal: seen[key].signal,
-                        security: seen[key].security,
-                        secured: seen[key].secured
-                    })
-                }
-                items.sort(function(a, b) { return b.signal - a.signal })
-                wifiModel.clear()
-                for (var j = 0; j < items.length; j++)
-                    wifiModel.append(items[j])
-            }
-        }
-    }
-
-    ListModel { id: wifiModel }
-
-    Timer {
-        id: wifiRescan
-        interval: 100
-        onTriggered: wifiScan.exec(["sh", "-c",
-            "nmcli dev wifi rescan 2>/dev/null; sleep 2; nmcli -t -f IN-USE,SSID,SIGNAL,SECURITY dev wifi list --rescan no 2>/dev/null | grep -v '^$'"])
-    }
-
-    Process {
-        id: wifiConnect
-        running: false
+        function onWidthChanged() { recalc() }
     }
 
     Connections {
         target: networkModule
         function onNetworkExpandedChanged() {
-            layout.recalc()
-            if (!networkModule.networkExpanded) {
-                radiusRestoreTimer.restart()
-                if (layout.hovered) {
-                    volumeModule.show()
-                    brightnessModule.show()
-                }
-            }
-            if (networkModule.networkExpanded) {
-                if (workspaceModule.notifCenterExpanded)
-                    workspaceModule.notifCenterExpanded = false
-                if (workspaceModule.overviewExpanded)
-                    workspaceModule.overviewExpanded = false
-                if (musicModule.lyricsMode)
-                    musicModule.exitLyricsMode()
-                if (musicModule.lyricsExpanded)
-                    musicModule.lyricsExpanded = false
-                networkRefresh.restart()
+            if (eventBus) {
+                eventBus.publish("modeChanged", { mode: "networkExpanded", value: networkModule.networkExpanded })
             }
         }
+        function onWidthChanged() { recalc() }
     }
 
     Connections {
-        target: networkModule
-        function onWidthChanged() { layout.recalc() }
+        target: registry
+        function onLayoutChanged() { recalc() }
     }
 
     Item {
@@ -354,362 +285,123 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         height: parent.height
 
-        property real _opacity: (workspaceModule.notifCenterExpanded || musicModule.lyricsMode || musicModule.lyricsExpanded || workspaceModule.overviewExpanded || networkModule.networkExpanded) ? 0 : 1
+        property real _opacity: (notifServer.notifCenterExpanded || musicModule.lyricsMode || musicModule.lyricsExpanded || workspaceModule.overviewExpanded || networkModule.networkExpanded) ? 0 : 1
         Behavior on _opacity {
             NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
         }
         opacity: _opacity
         visible: _opacity > 0.01
 
-        RowLayout {
-            anchors.fill: parent
-            spacing: 0
-            Item {
-                id: leftPanel
-                Layout.preferredWidth: (layoutContent.width - clockPanel.Layout.preferredWidth) / 2
-                Layout.fillHeight: true
-                Item {
-                    id: leftContent
-                    anchors.left: parent.left
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: layout.leftContentWidth
-                    height: parent.height
-                    RowLayout {
-                        anchors.fill: parent
-                        spacing: layout.spacing
-                        WorkspaceModule {
-                            id: workspaceModule
-                            Layout.alignment: Qt.AlignVCenter
-                        }
-                        BatteryModule {
-                            id: batteryModule
-                            pillHovered: layout.hovered
-                            Layout.fillWidth: false
-                            Layout.alignment: Qt.AlignVCenter
-                        }
-                        VolumeModule {
-                            id: volumeModule
-                            pillHovered: layout.hovered
-                            Layout.fillWidth: false
-                            Layout.alignment: Qt.AlignVCenter
-                        }
-                        BrightnessModule {
-                            id: brightnessModule
-                            pillHovered: layout.hovered
-                            Layout.fillWidth: false
-                            Layout.alignment: Qt.AlignVCenter
-                        }
-                        MusicModule {
-                            id: musicModule
-                        }
-                    }
-                }
-                Text {
-                    text: "󰽰"
-                    font.family: "JetBrainsMonoNL Nerd Font"
-                    font.pixelSize: 20
-                    color: "#cba6f7"
-                    anchors.right: parent.right
-                    anchors.rightMargin: 4
-                    anchors.verticalCenter: parent.verticalCenter
-                    opacity: layout._musicOpacity
-                    visible: layout._musicOpacity > 0.01
+        Row {
+            id: moduleRow
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
 
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: musicModule.toggleLyricsMode()
-                    }
+            WorkspaceModule {
+                id: workspaceModule
+                anchors.verticalCenter: parent.verticalCenter
+            }
+            BatteryModule {
+                id: batteryModule
+                pillHovered: layout.hovered
+                anchors.verticalCenter: parent.verticalCenter
+            }
+            VolumeModule {
+                id: volumeModule
+                pillHovered: layout.hovered
+                anchors.verticalCenter: parent.verticalCenter
+            }
+            BrightnessModule {
+                id: brightnessModule
+                pillHovered: layout.hovered
+                anchors.verticalCenter: parent.verticalCenter
+            }
+            MusicModule {
+                id: musicModule
+                anchors.verticalCenter: parent.verticalCenter
+            }
+            Text {
+                id: lyricsIcon
+                text: "󰽰"
+                font.family: "JetBrainsMonoNL Nerd Font"
+                font.pixelSize: 20
+                color: "#cba6f7"
+                anchors.verticalCenter: parent.verticalCenter
+                opacity: layout._musicOpacity
+                visible: layout._musicOpacity > 0.01
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: musicModule.toggleLyricsMode()
                 }
             }
-            Item {
-                id: clockPanel
-                Layout.preferredWidth: clockModule.implicitWidth
-                Layout.fillHeight: true
+        }
 
-                ClockModule {
-                    id: clockModule
-                    anchors.centerIn: parent
-                }
-            }
+        ClockModule {
+            id: clockModule
+            anchors.centerIn: parent
+        }
+
+        Row {
+            id: rightRow
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+
             Item {
-                id: rightPanel
-                Layout.preferredWidth: (layoutContent.width - clockPanel.Layout.preferredWidth) / 2
-                Layout.fillHeight: true
-                Item {
-                    id: albumArtContainer
+                id: albumArtContainer
+                anchors.verticalCenter: parent.verticalCenter
+                width: layout.hovered ? artRow.implicitWidth + 12 : 28
+                height: 28
+                opacity: layout._musicOpacity
+                visible: layout._musicOpacity > 0.01
+
+                property bool artPlaying: musicModule.isPlaying
+
+                Behavior on width {
+                    SpringAnimation { spring: 2.5; damping: 0.6; mass: 1.5 }
+                }
+
+                Rectangle {
+                    anchors.fill: parent
+                    radius: 14
+                    color: "#313244"
+                    opacity: layout.hovered && layout._musicOpacity > 0.01 ? 1 : 0
+                    Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.InOutQuad } }
+                }
+
+                Row {
+                    id: artRow
                     anchors.left: parent.left
                     anchors.leftMargin: 4
                     anchors.verticalCenter: parent.verticalCenter
-                    width: layout.hovered ? artRow.implicitWidth + 12 : 28
-                    height: 28
-                    opacity: layout._musicOpacity
-                    visible: layout._musicOpacity > 0.01
-
-                    property bool artPlaying: musicModule.isPlaying
-
-                    Behavior on width {
-                        SpringAnimation { spring: 2.5; damping: 0.6; mass: 1.5 }
-                    }
+                    spacing: 4
 
                     Rectangle {
-                        anchors.fill: parent
-                        radius: 14
+                        id: artFrame
+                        width: 28
+                        height: 30
+                        radius: 12
+                        clip: true
                         color: "#313244"
-                        opacity: layout.hovered && layout._musicOpacity > 0.01 ? 1 : 0
-                        Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.InOutQuad } }
-                    }
-
-                    Row {
-                        id: artRow
-                        anchors.left: parent.left
-                        anchors.leftMargin: 4
                         anchors.verticalCenter: parent.verticalCenter
-                        spacing: 4
 
-                        Rectangle {
-                            id: artFrame
-                            width: 28
-        height: 30
-                            radius: 12
-                            clip: true
-                            color: "#313244"
-                            anchors.verticalCenter: parent.verticalCenter
-
-                            IconImage {
-                                anchors.fill: parent
-                                anchors.margins: 2
-                                source: musicModule.trackArtUrl !== "" ? musicModule.trackArtUrl : ""
-                                asynchronous: true
-                            }
-                        }
-
-                        Text {
-                            text: "\uF048"
-                            font.family: "JetBrainsMonoNL Nerd Font"
-                            font.pixelSize: 18
-                            color: "#cdd6f4"
-                            anchors.verticalCenter: parent.verticalCenter
-                            opacity: layout.hovered ? 1 : 0
-                            Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.InOutQuad } }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    if (musicModule.activePlayer && musicModule.activePlayer.canGoPrevious)
-                                        musicModule.activePlayer.previous()
-                                }
-                            }
-                        }
-
-                        Text {
-                            text: albumArtContainer.artPlaying ? "\uF04D" : "\uF04B"
-                            font.family: "JetBrainsMonoNL Nerd Font"
-                            font.pixelSize: 18
-                color: musicModule._coverPrimary
-                            anchors.verticalCenter: parent.verticalCenter
-                            opacity: layout.hovered ? 1 : 0
-                            Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.InOutQuad } }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    if (musicModule.activePlayer && musicModule.activePlayer.canTogglePlaying)
-                                        musicModule.activePlayer.togglePlaying()
-                                }
-                            }
-                        }
-
-                        Text {
-                            text: "\uF051"
-                            font.family: "JetBrainsMonoNL Nerd Font"
-                            font.pixelSize: 18
-                            color: "#cdd6f4"
-                            anchors.verticalCenter: parent.verticalCenter
-                            opacity: layout.hovered ? 1 : 0
-                            Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.InOutQuad } }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    if (musicModule.activePlayer && musicModule.activePlayer.canGoNext)
-                                        musicModule.activePlayer.next()
-                                }
-                            }
+                        IconImage {
+                            anchors.fill: parent
+                            anchors.margins: 2
+                            source: musicModule.trackArtUrl !== "" ? musicModule.trackArtUrl : ""
+                            asynchronous: true
                         }
                     }
-                }
-                Item {
-                    id: rightContent
-                    anchors.right: parent.right
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: layout.rightContentWidth
-                    height: parent.height
-                    SystemTrayModule {
-                        id: trayModule
-                        anchors.right: parent.right
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                    NetworkModule {
-                        id: networkModule
-                        pillHovered: layout.hovered
-                        anchors.right: trayModule.left
-                        anchors.rightMargin: 4
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
+
                     Text {
-                        id: notifBell
-                        text: "󰂞"
+                        text: "\uF048"
                         font.family: "JetBrainsMonoNL Nerd Font"
                         font.pixelSize: 18
-                    color: "#cba6f7"
-                        opacity: workspaceModule.notifOpacity
-                        visible: workspaceModule.notifOpacity > 0.01
-                        anchors.right: networkModule.left
-                        anchors.rightMargin: 4
-                        anchors.verticalCenter: parent.verticalCenter
-
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: workspaceModule.notifCenterExpanded = !workspaceModule.notifCenterExpanded
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    Row {
-        id: leftWaves
-        anchors.left: parent.left
-        anchors.leftMargin: 6
-        anchors.rightMargin: 10
-        anchors.verticalCenter: parent.verticalCenter
-        spacing: 4
-        opacity: layout._musicOpacity * (musicModule.isPlaying ? 1 : 0)
-        visible: layout._musicOpacity > 0.01 && musicModule.isPlaying
-        Repeater {
-            model: waveModel
-            Rectangle {
-                width: 2
-                height: model.barHeight
-                radius: 1
-                color: musicModule.lyricsMode ? musicModule._coverPrimary : "#cba6f7"
-                Behavior on color {
-                    ColorAnimation { duration: 500 }
-                }
-                anchors.verticalCenter: parent.verticalCenter
-
-                Behavior on height {
-                    NumberAnimation { duration: 80; easing.type: Easing.OutQuad }
-                }
-            }
-        }
-    }
-
-    Row {
-        id: rightWaves
-        anchors.right: parent.right
-        anchors.rightMargin: 6
-        anchors.leftMargin: 10
-        anchors.verticalCenter: parent.verticalCenter
-        spacing: 4
-        opacity: layout._musicOpacity * (musicModule.isPlaying ? 1 : 0)
-        visible: layout._musicOpacity > 0.01 && musicModule.isPlaying
-        layoutDirection: Qt.RightToLeft
-        Repeater {
-            model: waveModel
-            Rectangle {
-                width: 2
-                height: model.barHeight
-                radius: 1
-                color: musicModule.lyricsMode ? musicModule._coverPrimary : "#cba6f7"
-                Behavior on color {
-                    ColorAnimation { duration: 500 }
-                }
-                anchors.verticalCenter: parent.verticalCenter
-
-                Behavior on height {
-                    NumberAnimation { duration: 80; easing.type: Easing.OutQuad }
-                }
-            }
-        }
-    }
-
-    Item {
-        id: lyricsOverlay
-        anchors.left: leftWaves.right
-        anchors.leftMargin: 20
-        anchors.right: rightWaves.left
-        anchors.rightMargin: 20
-        anchors.verticalCenter: parent.verticalCenter
-        height: 28
-
-        property real _opacity: musicModule.lyricsMode && !musicModule.lyricsExpanded ? 1 : 0
-        Behavior on _opacity {
-            NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
-        }
-        opacity: _opacity
-        visible: _opacity > 0.01
-
-        Text {
-            id: lyricsNoteIcon
-            text: "󰽰"
-            font.family: "JetBrainsMonoNL Nerd Font"
-            font.pixelSize: 20
-            color: musicModule._coverSecondary
-            Behavior on color {
-                ColorAnimation { duration: 500 }
-            }
-            anchors.left: parent.left
-            anchors.verticalCenter: parent.verticalCenter
-
-            MouseArea {
-                anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-                onClicked: musicModule.toggleLyricsMode()
-            }
-        }
-
-        Item {
-            id: lyricsControlsWrapper
-            anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
-            width: controlsContent.implicitWidth
-            height: 30
-
-            Row {
-                id: controlsContent
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 4
-
-                Item {
-                    width: layout.hovered ? prevBtn.implicitWidth : 0
-                    height: 30
-                    clip: true
-                    Behavior on width {
-                        NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
-                    }
-
-                    Text {
-                        id: prevBtn
-                        text: "\uF048"
-                        font.family: "JetBrainsMonoNL Nerd Font"
-                        font.pixelSize: 16
-                        color: musicModule._coverSecondary
-                        Behavior on color {
-                            ColorAnimation { duration: 500 }
-                        }
+                        color: "#cdd6f4"
                         anchors.verticalCenter: parent.verticalCenter
                         opacity: layout.hovered ? 1 : 0
-                        Behavior on opacity {
-                            NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
-                        }
+                        Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.InOutQuad } }
 
                         MouseArea {
                             anchors.fill: parent
@@ -720,478 +412,15 @@ Item {
                             }
                         }
                     }
-                }
-
-                Item {
-                    width: layout.hovered ? playBtn.implicitWidth : 0
-                    height: 30
-                    clip: true
-                    Behavior on width {
-                        NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
-                    }
 
                     Text {
-                        id: playBtn
-                        text: musicModule.isPlaying ? "\uF04D" : "\uF04B"
+                        text: albumArtContainer.artPlaying ? "\uF04D" : "\uF04B"
                         font.family: "JetBrainsMonoNL Nerd Font"
-                        font.pixelSize: 16
+                        font.pixelSize: 18
                         color: musicModule._coverPrimary
-                        Behavior on color {
-                            ColorAnimation { duration: 500 }
-                        }
                         anchors.verticalCenter: parent.verticalCenter
                         opacity: layout.hovered ? 1 : 0
-                        Behavior on opacity {
-                            NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
-                        }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                if (musicModule.activePlayer && musicModule.activePlayer.canTogglePlaying)
-                                    musicModule.activePlayer.togglePlaying()
-                            }
-                        }
-                    }
-                }
-
-                Item {
-                    width: layout.hovered ? nextBtn.implicitWidth : 0
-                    height: 30
-                    clip: true
-                    Behavior on width {
-                        NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
-                    }
-
-                    Text {
-                        id: nextBtn
-                        text: "\uF051"
-                        font.family: "JetBrainsMonoNL Nerd Font"
-                        font.pixelSize: 16
-                        color: musicModule._coverSecondary
-                        Behavior on color {
-                            ColorAnimation { duration: 500 }
-                        }
-                        anchors.verticalCenter: parent.verticalCenter
-                        opacity: layout.hovered ? 1 : 0
-                        Behavior on opacity {
-                            NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
-                        }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                if (musicModule.activePlayer && musicModule.activePlayer.canGoNext)
-                                    musicModule.activePlayer.next()
-                            }
-                        }
-                    }
-                }
-
-                Rectangle {
-                    width: 30
-                    height: 30
-                    radius: 12
-                    clip: true
-                    color: "#313244"
-                    anchors.verticalCenter: parent.verticalCenter
-
-                    IconImage {
-                        anchors.fill: parent
-                        anchors.margins: 2
-                        source: musicModule.trackArtUrl !== "" ? musicModule.trackArtUrl : ""
-                        asynchronous: true
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: musicModule.toggleLyricsExpanded()
-                    }
-                }
-            }
-        }
-
-        Text {
-            id: lyricDisplayText
-            anchors.left: lyricsNoteIcon.right
-            anchors.leftMargin: 8
-            anchors.right: lyricsControlsWrapper.left
-            anchors.rightMargin: 8
-            anchors.verticalCenter: parent.verticalCenter
-            text: musicModule._displayText
-            color: musicModule._coverText
-            Behavior on color {
-                ColorAnimation { duration: 500 }
-            }
-            font.pixelSize: 14
-            font.family: "JetBrainsMonoNL Nerd Font"
-
-            onImplicitWidthChanged: layout.recalc()
-        }
-    }
-
-    Item {
-        id: wsOverlay
-        anchors.left: leftWaves.right
-        anchors.leftMargin: 20
-        anchors.right: rightWaves.left
-        anchors.rightMargin: 20
-        anchors.verticalCenter: parent.verticalCenter
-        height: 28
-
-        property real _opacity: workspaceModule.overviewExpanded ? 1 : 0
-        Behavior on _opacity {
-            NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
-        }
-        opacity: _opacity
-        visible: _opacity > 0.01
-
-        Text {
-            id: wsReturnBtn
-            text: "\uF311"
-            font.family: "JetBrainsMonoNL Nerd Font"
-            font.pixelSize: 20
-            color: "#f38ba8"
-            anchors.left: parent.left
-            anchors.verticalCenter: parent.verticalCenter
-
-            MouseArea {
-                anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-                onClicked: workspaceModule.overviewExpanded = false
-            }
-        }
-
-        Row {
-            id: wsPillRow
-            anchors.left: wsReturnBtn.right
-            anchors.leftMargin: 8
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: 8
-
-            Repeater {
-                model: {
-                    var all = workspaceModule.getSortedWsList()
-                    var filtered = []
-                    for (var i = 0; i < all.length; i++) {
-                        if (workspaceModule.windowsOfWs(all[i]).length > 0)
-                            filtered.push(all[i])
-                    }
-                    return filtered
-                }
-
-                Rectangle {
-                    id: wsPill
-                    width: pillRow.implicitWidth + 24
-                    height: 30
-                    radius: 14
-                    color: "#313244"
-                    border.width: isActiveWs ? 1 : 0
-                    border.color: "#cba6f7"
-
-                    property string wsId: String(modelData)
-                    property bool isActiveWs: String(wsId) === String(workspaceModule.activeWsId)
-
-                    MouseArea {
-                        anchors.fill: parent
-                        z: -1
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            var ws = workspaceModule._workspaces[wsPill.wsId]
-                            var idx = ws ? ws.idx : 0
-                            workspaceModule.niriAction("focus-workspace " + idx)
-                        }
-                    }
-
-                    Row {
-                        id: pillRow
-                        anchors.centerIn: parent
-                        spacing: 6
-
-                        Text {
-                            text: workspaceModule.iconForWs(wsPill.wsId)
-                            font.family: "JetBrainsMonoNL Nerd Font"
-                            font.pixelSize: 20
-                            color: "#cba6f7"
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-
-                        Repeater {
-                            model: workspaceModule.windowsOfWs(wsPill.wsId)
-                            IconImage {
-                                width: 20
-                                height: 20
-                                asynchronous: true
-                                source: workspaceModule._iconPaths[modelData.app_id] || ""
-                                anchors.verticalCenter: parent.verticalCenter
-
-                                MouseArea {
-                                    anchors.fill: parent
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: {
-                                        workspaceModule.niriAction("focus-window --id " + modelData.id)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    Item {
-        id: lyricsExpandedOverlay
-        anchors.fill: parent
-
-        property real _opacity: musicModule.lyricsExpanded ? 1 : 0
-        Behavior on _opacity {
-            NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
-        }
-        opacity: _opacity
-        visible: _opacity > 0.01
-
-        property real _lyricOpacity: 1
-        Behavior on _lyricOpacity {
-            NumberAnimation { duration: 180; easing.type: Easing.InOutQuad }
-        }
-
-        property real _lyricY: 0
-        Behavior on _lyricY {
-            NumberAnimation { duration: 220; easing.type: Easing.OutQuad }
-        }
-
-        property bool _lyricAnimating: false
-        property string _oldPrevLine: ""
-        property string _oldCurrLine: ""
-        property string _oldNextLine: ""
-
-        Connections {
-            target: musicModule
-            function on_CurrentLyricIndexChanged() {
-                if (!musicModule.lyricsExpanded) return
-                _oldPrevLine = prevLine.text
-                _oldCurrLine = currentLine.text
-                _oldNextLine = nextLine.text
-                _lyricAnimating = true
-                _lyricOpacity = 0
-                _lyricY = -40
-                lyricSlideTimer.restart()
-            }
-        }
-
-        Timer {
-            id: lyricSlideTimer
-            interval: 180
-            onTriggered: {
-                _lyricY = 40
-                lyricShowTimer.restart()
-            }
-        }
-
-        Timer {
-            id: lyricShowTimer
-            interval: 30
-            onTriggered: {
-                _lyricY = 0
-                _lyricOpacity = 1
-                _lyricAnimating = false
-            }
-        }
-
-        Row {
-            anchors.fill: parent
-            spacing: 0
-
-            Rectangle {
-                width: 340
-                height: 340
-                clip: true
-                radius: 20
-                color: musicModule._coverTertiary
-                anchors.verticalCenter: parent.verticalCenter
-                Behavior on color {
-                    ColorAnimation { duration: 500 }
-                }
-
-                IconImage {
-                    anchors.centerIn: parent
-                    width: 272
-                    height: 272
-                    source: musicModule.trackArtUrl !== "" ? musicModule.trackArtUrl : ""
-                    asynchronous: true
-                }
-
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: musicModule.toggleLyricsExpanded()
-                }
-            }
-
-            Item {
-                width: parent.width - 340
-                height: parent.height
-
-                Column {
-                    anchors.left: parent.left
-                    anchors.leftMargin: 28
-                    anchors.right: parent.right
-                    anchors.rightMargin: 28
-                    anchors.top: parent.top
-                    anchors.topMargin: 24
-
-                    Text {
-                        id: expandedTitle
-                        text: musicModule.trackTitle || ""
-                        font.family: "JetBrainsMonoNL Nerd Font"
-                        font.pixelSize: 20
-                        font.bold: true
-                        color: musicModule._coverText
-                        Behavior on color {
-                            ColorAnimation { duration: 500 }
-                        }
-                        width: parent.width
-                        elide: Text.ElideRight
-                    }
-
-                    Text {
-                        text: musicModule.trackArtist || ""
-                        font.family: "JetBrainsMonoNL Nerd Font"
-                        font.pixelSize: 14
-                        color: musicModule._coverSecondary
-                        Behavior on color {
-                            ColorAnimation { duration: 500 }
-                        }
-                        width: parent.width
-                        elide: Text.ElideRight
-                    }
-                }
-
-                Rectangle {
-                    anchors.left: parent.left
-                    anchors.leftMargin: 28
-                    anchors.right: parent.right
-                    anchors.rightMargin: 28
-                    anchors.top: parent.top
-                    anchors.topMargin: 80
-                    anchors.bottom: parent.bottom
-                    anchors.bottomMargin: 74
-                    radius: 12
-                    color: "#313244"
-
-                    Column {
-                        anchors.centerIn: parent
-                        spacing: 6
-
-                        Text {
-                            id: prevLine
-                            opacity: lyricsExpandedOverlay._lyricOpacity
-                            transform: Translate { y: lyricsExpandedOverlay._lyricY }
-                            text: lyricsExpandedOverlay._lyricAnimating ? lyricsExpandedOverlay._oldPrevLine : (musicModule._currentLyricIndex > 0 && musicModule._currentLyricIndex <= musicModule._lrcLines.length
-                                ? musicModule._lrcLines[musicModule._currentLyricIndex - 1].text : "")
-                            font.family: "JetBrainsMonoNL Nerd Font"
-                            font.pixelSize: 14
-                            color: musicModule._coverSecondary
-                            Behavior on color {
-                                ColorAnimation { duration: 500 }
-                            }
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            visible: text !== ""
-                        }
-
-                        Text {
-                            id: currentLine
-                            opacity: lyricsExpandedOverlay._lyricOpacity
-                            transform: Translate { y: lyricsExpandedOverlay._lyricY }
-                            text: lyricsExpandedOverlay._lyricAnimating ? lyricsExpandedOverlay._oldCurrLine : (musicModule._currentLyricIndex >= 0 && musicModule._currentLyricIndex < musicModule._lrcLines.length
-                                ? musicModule._lrcLines[musicModule._currentLyricIndex].text : musicModule.trackTitle || "")
-                            font.family: "JetBrainsMonoNL Nerd Font"
-                            font.pixelSize: 16
-                            font.bold: true
-                            color: musicModule._coverText
-                            Behavior on color {
-                                ColorAnimation { duration: 500 }
-                            }
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-
-                        Text {
-                            id: nextLine
-                            opacity: lyricsExpandedOverlay._lyricOpacity
-                            transform: Translate { y: lyricsExpandedOverlay._lyricY }
-                            text: lyricsExpandedOverlay._lyricAnimating ? lyricsExpandedOverlay._oldNextLine : (musicModule._currentLyricIndex >= 0 && musicModule._currentLyricIndex + 1 < musicModule._lrcLines.length
-                                ? musicModule._lrcLines[musicModule._currentLyricIndex + 1].text : "")
-                            font.family: "JetBrainsMonoNL Nerd Font"
-                            font.pixelSize: 14
-                            color: musicModule._coverSecondary
-                            Behavior on color {
-                                ColorAnimation { duration: 500 }
-                            }
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            visible: text !== ""
-                        }
-                    }
-        }
-
-        MouseArea {
-            anchors.left: parent.left
-            anchors.leftMargin: 340
-            anchors.right: parent.right
-            anchors.top: parent.top
-            anchors.bottom: parent.bottom
-            cursorShape: Qt.PointingHandCursor
-            onClicked: musicModule.toggleLyricsExpanded()
-        }
-
-        Row {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.bottom: parent.bottom
-                    anchors.bottomMargin: 18
-                    spacing: 14
-
-                    Text {
-                        text: "\uF048"
-                        font.family: "JetBrainsMonoNL Nerd Font"
-                        font.pixelSize: 16
-                        color: musicModule._coverSecondary
-                        Behavior on color {
-                            ColorAnimation { duration: 500 }
-                        }
-                        anchors.verticalCenter: parent.verticalCenter
-
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                if (musicModule.activePlayer && musicModule.activePlayer.canGoPrevious)
-                                    musicModule.activePlayer.previous()
-                            }
-                        }
-                    }
-
-                    Rectangle {
-                        width: 38
-                        height: 38
-                        radius: 19
-                        color: musicModule._coverTertiary
-                        Behavior on color {
-                            ColorAnimation { duration: 500 }
-                        }
-
-                        Text {
-                            text: musicModule.isPlaying ? "\uF04D" : "\uF04B"
-                            font.family: "JetBrainsMonoNL Nerd Font"
-                            font.pixelSize: 16
-                            color: musicModule._coverPrimary
-                            Behavior on color {
-                                ColorAnimation { duration: 500 }
-                            }
-                            anchors.centerIn: parent
-                        }
+                        Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.InOutQuad } }
 
                         MouseArea {
                             anchors.fill: parent
@@ -1206,12 +435,11 @@ Item {
                     Text {
                         text: "\uF051"
                         font.family: "JetBrainsMonoNL Nerd Font"
-                        font.pixelSize: 16
-                        color: musicModule._coverSecondary
-                        Behavior on color {
-                            ColorAnimation { duration: 500 }
-                        }
+                        font.pixelSize: 18
+                        color: "#cdd6f4"
                         anchors.verticalCenter: parent.verticalCenter
+                        opacity: layout.hovered ? 1 : 0
+                        Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.InOutQuad } }
 
                         MouseArea {
                             anchors.fill: parent
@@ -1224,389 +452,81 @@ Item {
                     }
                 }
             }
-        }
-    }
-
-    Item {
-        id: notifCenter
-        anchors.fill: parent
-
-        property real _opacity: workspaceModule.notifCenterExpanded ? 1 : 0
-        Behavior on _opacity {
-            NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
-        }
-        opacity: _opacity
-        visible: _opacity > 0.01
-
-        scale: workspaceModule.notifCenterExpanded ? 1 : 0.8
-        Behavior on scale {
-            SpringAnimation { spring: 2.0; damping: 0.5; mass: 1.0 }
-        }
-
-        property int expandedIndex: -1
-        property bool clearing: false
-
-        onClearingChanged: {
-            if (clearing) clearTimer.restart()
-        }
-
-        Timer {
-            id: clearTimer
-            interval: 200
-            onTriggered: {
-                workspaceModule._notificationHistory = []
-                workspaceModule.clearNotification = true
-                notifCenter.clearing = false
-            }
-        }
-
-        Row {
-            id: notifTopRow
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.top: parent.top
-            anchors.topMargin: 24
-            spacing: 12
-
             Text {
-                id: notifIconTop
+                id: notifBell
                 text: "󰂞"
                 font.family: "JetBrainsMonoNL Nerd Font"
-                font.pixelSize: 33
+                font.pixelSize: 18
                 color: "#cba6f7"
+                opacity: notifServer.notifOpacity
+                visible: notifServer.notifOpacity > 0.01
                 anchors.verticalCenter: parent.verticalCenter
 
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: workspaceModule.notifCenterExpanded = false
+                    onClicked: notifServer.notifCenterExpanded = !notifServer.notifCenterExpanded
                 }
             }
-
-            ClockModule {
-                id: notifClock
-                scale: workspaceModule.notifCenterExpanded ? 0.7 : 1
-
-                Behavior on scale {
-                    SpringAnimation { spring: 2.0; damping: 0.5; mass: 1.0 }
-                }
-
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: workspaceModule.notifCenterExpanded = false
-                }
-            }
-
-            Text {
-                text: "󰂛"
-                font.family: "JetBrainsMonoNL Nerd Font"
-                font.pixelSize: 30
-                color: "#6c7086"
+            NetworkModule {
+                id: networkModule
+                pillHovered: layout.hovered
                 anchors.verticalCenter: parent.verticalCenter
-
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: { notifCenter.clearing = true }
-                }
             }
-        }
-
-        ListView {
-            id: notifList
-            anchors.top: notifTopRow.bottom
-            anchors.topMargin: 18
-            anchors.left: parent.left
-            anchors.leftMargin: 24
-            anchors.right: parent.right
-            anchors.rightMargin: 24
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: 18
-            clip: true
-            spacing: 10
-            opacity: notifCenter.clearing ? 0 : 1
-            Behavior on opacity {
-                NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
-            }
-            model: workspaceModule._notificationHistory
-
-            delegate: Rectangle {
-                id: notifDelegate
-                property int myIndex: index
-                property bool expanded: notifCenter.expandedIndex === myIndex
-                width: ListView.view.width
-                height: expanded ? notifSummary.implicitHeight + 6 + bodyText.implicitHeight + 24 : (modelData.body && modelData.body !== "" ? 78 : 54)
-                radius: 8
-                color: "#313244"
-
-                Behavior on height {
-                    NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
-                }
-
-                Text {
-                    id: notifAppName
-                    anchors.top: parent.top
-                    anchors.topMargin: 12
-                    anchors.left: parent.left
-                    anchors.leftMargin: 15
-                    text: modelData.appName
-                    color: "#cdd6f4"
-                    font.pixelSize: 18
-                    width: Math.min(implicitWidth + 12, 135)
-                    elide: Text.ElideRight
-                }
-                Text {
-                    id: notifTime
-                    anchors.top: parent.top
-                    anchors.topMargin: 12
-                    anchors.right: parent.right
-                    anchors.rightMargin: 15
-                    text: modelData.time
-                    color: "#585b70"
-                    font.pixelSize: 17
-                }
-                Text {
-                    id: notifSummary
-                    anchors.top: parent.top
-                    anchors.topMargin: 12
-                    anchors.left: notifAppName.right
-                    anchors.leftMargin: 10
-                    anchors.right: notifTime.left
-                    anchors.rightMargin: 10
-                    text: modelData.summary
-                    color: "#a6adc8"
-                    font.pixelSize: 18
-                    elide: notifDelegate.expanded ? Text.ElideNone : Text.ElideRight
-                    wrapMode: notifDelegate.expanded ? Text.WordWrap : Text.NoWrap
-                    maximumLineCount: notifDelegate.expanded ? 0 : 1
-                }
-                Text {
-                    id: bodyText
-                    anchors.top: notifSummary.bottom
-                    anchors.topMargin: 6
-                    anchors.left: parent.left
-                    anchors.leftMargin: 15
-                    anchors.right: parent.right
-                    anchors.rightMargin: 15
-                    text: modelData.body || ""
-                    color: notifDelegate.expanded ? "#cdd6f4" : "#6c7086"
-                    font.pixelSize: notifDelegate.expanded ? 22 : 16
-                    elide: notifDelegate.expanded ? Text.ElideNone : Text.ElideRight
-                    wrapMode: notifDelegate.expanded ? Text.WordWrap : Text.NoWrap
-                    maximumLineCount: notifDelegate.expanded ? 0 : 1
-                    visible: modelData.body && modelData.body !== ""
-                }
-
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        if (notifCenter.expandedIndex === myIndex)
-                            notifCenter.expandedIndex = -1
-                        else
-                            notifCenter.expandedIndex = myIndex
-                    }
-                }
+            SystemTrayModule {
+                id: trayModule
+                anchors.verticalCenter: parent.verticalCenter
             }
         }
     }
 
-    Item {
+    LyricsCompactOverlay {
+        id: lyricsOverlay
+        anchors.left: parent.left
+        anchors.leftMargin: audioPeaks.overlayLeftInset
+        anchors.right: parent.right
+        anchors.rightMargin: audioPeaks.overlayRightInset
+        anchors.verticalCenter: parent.verticalCenter
+        height: 28
+        musicModule: layout.musicModule
+        hovered: layout.hovered
+    }
+
+    WsOverviewOverlay {
+        id: wsOverlay
+        anchors.left: parent.left
+        anchors.leftMargin: audioPeaks.overlayLeftInset
+        anchors.right: parent.right
+        anchors.rightMargin: audioPeaks.overlayRightInset
+        anchors.verticalCenter: parent.verticalCenter
+        height: 28
+        workspaceModule: layout.workspaceModule
+    }
+
+    LyricsExpandedOverlay {
+        id: lyricsExpandedOverlay
+        anchors.fill: parent
+        musicModule: layout.musicModule
+    }
+
+    NotifCenterOverlay {
+        id: notifCenter
+        anchors.fill: parent
+        notifServer: layout.notifServer
+    }
+
+    NetworkOverlay {
         id: networkOverlay
         anchors.fill: parent
-
-        property real _opacity: networkModule.networkExpanded ? 1 : 0
-        Behavior on _opacity {
-            NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
-        }
-        opacity: _opacity
-        visible: _opacity > 0.01
-
-        property string _selectedSsid: ""
-        property bool _needPassword: false
-        property bool _showPassword: false
-
-        Row {
-            id: networkTopRow
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.top: parent.top
-            anchors.topMargin: 16
-            spacing: 8
-
-            Text {
-                text: "󰛍"
-                font.family: "JetBrainsMonoNL Nerd Font"
-                font.pixelSize: 22
-                color: "#89b4fa"
-                anchors.verticalCenter: parent.verticalCenter
-
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: networkModule.networkExpanded = false
-                }
-            }
-
-            ClockModule {
-                id: networkClock
-                scale: networkModule.networkExpanded ? 0.7 : 1
-                Behavior on scale {
-                    SpringAnimation { spring: 2.0; damping: 0.5; mass: 1.0 }
-                }
-
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: networkModule.networkExpanded = false
-                }
-            }
-
-            Text {
-                text: "󰑐"
-                font.family: "JetBrainsMonoNL Nerd Font"
-                font.pixelSize: 20
-                color: "#6c7086"
-                anchors.verticalCenter: parent.verticalCenter
-
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: wifiRescan.restart()
-                }
-            }
-        }
-
-        Item {
-            id: wifiListView
-            anchors.top: networkTopRow.bottom
-            anchors.topMargin: 12
-            anchors.left: parent.left
-            anchors.leftMargin: 16
-            anchors.right: parent.right
-            anchors.rightMargin: 16
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: 12
-            clip: true
-
-            ListView {
-                anchors.fill: parent
-                spacing: 4
-                model: wifiModel
-
-                delegate: Rectangle {
-                    id: wifiDelegate
-                    width: ListView.view.width
-                    height: 40
-                    radius: 8
-                    color: "transparent"
-
-                    Row {
-                        anchors.verticalCenter: parent.verticalCenter
-                        anchors.left: parent.left
-                        anchors.leftMargin: 12
-                        spacing: 10
-
-                        Text {
-                            text: model.secured ? (model.signal <= 25 ? "󰤡" : model.signal <= 50 ? "󰤤" : model.signal <= 75 ? "󰤧" : "󰤪") : (model.signal <= 25 ? "󰤟" : model.signal <= 50 ? "󰤢" : model.signal <= 75 ? "󰤥" : "󰤨")
-                            font.family: "JetBrainsMonoNL Nerd Font"
-                            font.pixelSize: 20
-                            color: model.inUse ? "#7dc4e4" : "#6c7086"
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-
-                        Text {
-                            text: model.ssid
-                            color: model.inUse ? "#7dc4e4" : "#cdd6f4"
-                            font.pixelSize: 18
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                    }
-
-                    Rectangle {
-                        anchors.right: parent.right
-                        anchors.rightMargin: 8
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: model.inUse ? 52 : 40
-                        height: 24
-                        radius: 12
-                        color: model.inUse ? "#313244" : "#89b4fa"
-
-                        Text {
-                            text: model.inUse ? "已连接" : "连接"
-                            font.pixelSize: 11
-                            color: model.inUse ? "#6c7086" : "#1e1e2e"
-                            anchors.centerIn: parent
-                        }
-
-                    MouseArea {
-                        id: wifiMouse
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            if (model.secured) {
-                                networkOverlay._selectedSsid = model.ssid
-                                wifiPasswordDialog.restart()
-                            } else {
-                                wifiConnect.exec(["nmcli", "dev", "wifi", "connect", model.ssid])
-                            }
-                        }
-                    }
-        }
-    }
-
-    Timer {
-        id: wifiPasswordDialog
-        interval: 50
-        onTriggered: wifiPasswordProc.exec(["sh", "-c",
-            "zenity --password --title='连接 " + networkOverlay._selectedSsid + "' 2>/dev/null"])
-    }
-
-    Process {
-        id: wifiPasswordProc
-        running: false
-
-        stdout: StdioCollector {
-            onStreamFinished: {
-                var pwd = text.trim()
-                if (pwd) {
-                    wifiConnect.exec(["nmcli", "dev", "wifi", "connect",
-                        networkOverlay._selectedSsid,
-                        "password", pwd])
-                }
-            }
-        }
-    }
-
-    Connections {
-        target: registry
-        function onLayoutChanged() {
-            layout.recalc()
-        }
-    }
-
-    Timer {
-        id: recalcTimer
-        interval: 500
-        running: true
-        repeat: true
-        onTriggered: layout.recalc()
-    }
-
-    Item {
-        width: 1
-        height: 1
-        opacity: 0
+        networkModule: layout.networkModule
     }
 
     Timer {
         id: radiusRestoreTimer
         interval: 400
         onTriggered: {
-            if (!workspaceModule.notifCenterExpanded && !workspaceModule.overviewExpanded && !musicModule.lyricsMode && !musicModule.lyricsExpanded && !networkModule.networkExpanded)
+            if (!notifServer.notifCenterExpanded && !workspaceModule.overviewExpanded && !musicModule.lyricsMode && !musicModule.lyricsExpanded && !networkModule.networkExpanded)
                 pillRadius = 0
         }
     }
-}
-}
-}
 }

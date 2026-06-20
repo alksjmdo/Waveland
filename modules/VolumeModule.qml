@@ -4,7 +4,7 @@ import Quickshell.Services.Pipewire
 
 Item {
     id: volumeModule
-    implicitWidth: active ? iconCell.width + row.spacing + volPct.implicitWidth : 0
+    implicitWidth: hoverBehavior.active ? iconCell.width + row.spacing + volPct.implicitWidth : 0
     implicitHeight: 42
     width: implicitWidth
     clip: true
@@ -14,18 +14,20 @@ Item {
     }
 
     property alias component: volumeModule
-    property bool active: false
     property bool pillHovered: false
-    property bool _ready: false
-    property bool _shownByHover: false
-    property bool _contentVisible: false
-    property bool _pctVisible: false
 
+    property bool _ready: false
+
+    HoverBehavior {
+        id: hoverBehavior
+    }
+
+    property bool _contentVisible: hoverBehavior.contentVisible
     on_ContentVisibleChanged: {
         if (_contentVisible) repaintTimer.restart()
     }
 
-    property real _opacity: _contentVisible ? 1 : 0
+    property real _opacity: hoverBehavior.contentVisible ? 1 : 0
     Behavior on _opacity {
         NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
     }
@@ -36,15 +38,7 @@ Item {
     }
 
     onPillHoveredChanged: {
-        if (pillHovered) {
-            _shownByHover = true
-            volumeModule.show()
-        } else if (_shownByHover) {
-            _shownByHover = false
-            _pctVisible = false
-            _contentVisible = false
-            hideActiveTimer.restart()
-        }
+        hoverBehavior.onPillHovered(pillHovered)
     }
 
     Timer {
@@ -52,34 +46,6 @@ Item {
         interval: 1000
         running: true
         onTriggered: volumeModule._ready = true
-    }
-
-    Timer {
-        id: hideActiveTimer
-        interval: 250
-        onTriggered: volumeModule.active = false
-    }
-
-    Timer {
-        id: showContentTimer
-        interval: 600
-        onTriggered: {
-            volumeModule._contentVisible = true
-            if (volumeModule.pillHovered) volumeModule._pctVisible = true
-        }
-    }
-
-    Timer {
-        id: hideTimer
-        interval: 3000
-        onTriggered: {
-            if (volumeModule.pillHovered) {
-                hideTimer.restart()
-            } else {
-                volumeModule._contentVisible = false
-                hideActiveTimer.restart()
-            }
-        }
     }
 
     Timer {
@@ -111,20 +77,14 @@ Item {
     }
 
     function show() {
-        if (!active) {
-            _contentVisible = false
-            volumeModule.active = true
-            showContentTimer.restart()
-        } else {
-            repaintTimer.restart()
-        }
-        hideTimer.restart()
+        hoverBehavior.show()
+        repaintTimer.restart()
     }
 
     function showVolume() {
         if (!_ready) return
-        _shownByHover = false
-        show()
+        hoverBehavior.showFromEvent()
+        repaintTimer.restart()
     }
 
     function volumeIcon() {
@@ -200,7 +160,7 @@ Item {
             color: "#cdd6f4"
             anchors.verticalCenter: parent.verticalCenter
 
-            property real _hoverOpacity: volumeModule._pctVisible ? 1 : 0
+            property real _hoverOpacity: hoverBehavior.pctVisible ? 1 : 0
             Behavior on _hoverOpacity {
                 NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
             }

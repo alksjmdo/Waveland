@@ -46,14 +46,34 @@ PanelWindow {
             expandedWidth: 180,
             persistent: true
         })
-        moduleRegistry.register("tray", "right", islandLayout.trayModule, {
-            idleWidth: 40,
-            expandedWidth: 120,
+        moduleRegistry.register("battery", "left", islandLayout.batteryModule, {
+            idleWidth: 0,
+            expandedWidth: 0,
+            persistent: true
+        })
+        moduleRegistry.register("volume", "left", islandLayout.volumeModule, {
+            idleWidth: 0,
+            expandedWidth: 0,
+            persistent: true
+        })
+        moduleRegistry.register("brightness", "left", islandLayout.brightnessModule, {
+            idleWidth: 0,
+            expandedWidth: 0,
             persistent: true
         })
         moduleRegistry.register("music", "left", islandLayout.musicModule, {
             idleWidth: 0,
             expandedWidth: 0,
+            persistent: true
+        })
+        moduleRegistry.register("network", "right", islandLayout.networkModule, {
+            idleWidth: 0,
+            expandedWidth: 0,
+            persistent: true
+        })
+        moduleRegistry.register("tray", "right", islandLayout.trayModule, {
+            idleWidth: 40,
+            expandedWidth: 120,
             persistent: true
         })
     }

@@ -4,7 +4,7 @@ import Quickshell.Io
 
 Item {
     id: networkModule
-    implicitWidth: active ? row.implicitWidth : 0
+    implicitWidth: hoverBehavior.active ? row.implicitWidth : 0
     implicitHeight: 42
     width: implicitWidth
     clip: true
@@ -14,18 +14,15 @@ Item {
     }
 
     property alias component: networkModule
-    property bool active: false
     property bool pillHovered: false
-    property bool _shownByHover: false
-    property bool _contentVisible: false
-    property bool _pctVisible: false
     property bool networkExpanded: false
 
-    on_ContentVisibleChanged: {
-        if (!_contentVisible) hideActiveTimer.restart()
+    HoverBehavior {
+        id: hoverBehavior
+        showDelay: 500
     }
 
-    property real _opacity: _contentVisible ? 1 : 0
+    property real _opacity: hoverBehavior.contentVisible ? 1 : 0
     Behavior on _opacity {
         NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
     }
@@ -36,14 +33,7 @@ Item {
     property bool _ready: false
 
     onPillHoveredChanged: {
-        if (pillHovered) {
-            _shownByHover = true
-            networkModule.show()
-        } else if (_shownByHover) {
-            _shownByHover = false
-            _pctVisible = false
-            _contentVisible = false
-        }
+        hoverBehavior.onPillHovered(pillHovered)
     }
 
     Process {
@@ -89,45 +79,11 @@ Item {
     }
 
     function show() {
-        if (!active) {
-            _contentVisible = false
-            networkModule.active = true
-            showContentTimer.restart()
-        }
-        hideTimer.restart()
+        hoverBehavior.show()
     }
 
     function showNetwork() {
-        _shownByHover = false
-        _pctVisible = false
-        show()
-    }
-
-    Timer {
-        id: hideActiveTimer
-        interval: 250
-        onTriggered: networkModule.active = false
-    }
-
-    Timer {
-        id: showContentTimer
-        interval: 500
-        onTriggered: {
-            networkModule._contentVisible = true
-            if (networkModule._shownByHover) networkModule._pctVisible = true
-        }
-    }
-
-    Timer {
-        id: hideTimer
-        interval: 3000
-        onTriggered: {
-            if (networkModule.pillHovered || !networkModule.connected) {
-                hideTimer.restart()
-            } else {
-                networkModule._contentVisible = false
-            }
-        }
+        hoverBehavior.showFromEvent()
     }
 
     function signalIcon() {
@@ -155,7 +111,7 @@ Item {
             color: networkModule.labelColor()
             anchors.verticalCenter: parent.verticalCenter
 
-            property real _hoverOpacity: networkModule._pctVisible ? 1 : 0
+            property real _hoverOpacity: hoverBehavior.pctVisible ? 1 : 0
             Behavior on _hoverOpacity {
                 NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
             }
